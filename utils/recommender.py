@@ -7,7 +7,6 @@ def load_jobs(filepath="dataset/jobs.csv"):
         df = pd.read_csv(filepath)
         return df
     except:
-        # Fallback hardcoded jobs agar CSV na mile
         return pd.DataFrame({
             'Job Title': ['Data Scientist', 'ML Engineer', 'Python Developer',
                          'Web Developer', 'DevOps Engineer', 'Data Analyst'],
@@ -23,8 +22,17 @@ def load_jobs(filepath="dataset/jobs.csv"):
             'Location': ['Bangalore', 'Hyderabad', 'Pune', 'Mumbai', 'Delhi', 'Chennai']
         })
 
+def add_manual_job(df, title, skills, experience=0, location="Not specified"):
+    skills_clean = skills.replace(",", " ").lower().strip()
+    new_row = pd.DataFrame([{
+        'Job Title':           title.strip(),
+        'Skills Required':     skills_clean,
+        'Experience Required': experience,
+        'Location':            location.strip()
+    }])
+    return pd.concat([df, new_row], ignore_index=True)
+
 def recommend_jobs(resume_text, df, top_n=5):
-    # Use 'Skills Required' or similar column
     skill_col = None
     for col in ['Skills Required', 'skills', 'description', 'Job Description', 'key_skills']:
         if col in df.columns:

@@ -5,7 +5,7 @@ import plotly.express as px
 from utils.pdf_parser import extract_text_from_pdf
 from utils.nlp_extractor import extract_skills, extract_education, extract_experience, extract_name
 from utils.scorer import calculate_score, get_grade, get_missing_skills
-from utils.recommender import load_jobs, recommend_jobs
+from utils.recommender import load_jobs, add_manual_job, recommend_jobs
 from utils.ai_suggestions import get_ai_suggestions, get_resume_score_feedback
 
 # ─── PAGE CONFIG ───────────────────────────────────────
