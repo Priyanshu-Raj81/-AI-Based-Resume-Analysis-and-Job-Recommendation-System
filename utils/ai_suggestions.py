@@ -5,22 +5,34 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def get_ai_suggestions(resume_text, missing_skills, job_title=""):
+
+def get_ai_suggestions(resume_text, missing_skills, job_title="", job_description=""):
+    """
+    Resume + manually entered Job Description ke basis pe
+    AI se personalized suggestions generate karta hai.
+    """
+
+    # JD context tab hi add karo jab available ho
+    jd_section = f"""
+Job Description (User Provided):
+{job_description[:1500]}
+""" if job_description.strip() else ""
+
     prompt = f"""
 You are an expert HR consultant and career coach.
 
-Analyze this resume and provide specific improvement suggestions:
+Analyze this resume against the job description and provide specific improvement suggestions:
 
 Resume Content:
 {resume_text[:2000]}
-
+{jd_section}
 Missing Skills for {job_title}: {', '.join(missing_skills) if missing_skills else 'None identified'}
 
 Please provide:
-1. Top 3 Resume Improvements
+1. Top 3 Resume Improvements (specific to this JD)
 2. Skills to Learn (with free resources)
 3. Career Path Suggestions
-4. ATS Optimization Tips
+4. ATS Optimization Tips (keywords from the JD to add)
 
 Be specific, practical, and encouraging. Format with clear sections.
 """
@@ -35,9 +47,15 @@ Be specific, practical, and encouraging. Format with clear sections.
     except Exception as e:
         return f"AI suggestions unavailable: {str(e)}"
 
-def get_resume_score_feedback(score, grade, name):
+
+def get_resume_score_feedback(score, grade, name, job_title=""):
+    """
+    Score ke basis pe short motivating feedback deta hai.
+    """
+    role_context = f" for the role of {job_title}" if job_title.strip() else ""
+
     prompt = f"""
-The candidate {name} got a resume match score of {score}% (Grade: {grade}).
+The candidate {name} got a resume match score of {score}% (Grade: {grade}){role_context}.
 
 Give a short, motivating 2-3 line feedback message based on this score.
 Be encouraging and suggest one key action they should take.
