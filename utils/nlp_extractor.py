@@ -3,20 +3,37 @@ import re
 
 nlp = spacy.load("en_core_web_sm")
 
-# Common skills list
+# ── Expanded Skills Database ─────────────────────────────────────────────────
 SKILLS_DB = [
-    "python", "java", "javascript", "c++", "sql", "machine learning",
-    "deep learning", "nlp", "data analysis", "pandas", "numpy",
-    "tensorflow", "pytorch", "scikit-learn", "docker", "kubernetes",
-    "aws", "azure", "git", "react", "node.js", "html", "css",
-    "mongodb", "mysql", "postgresql", "flask", "django", "fastapi",
-    "power bi", "tableau", "excel", "r", "matlab", "opencv"
+    # Languages
+    "python", "java", "javascript", "c++", "c#", "r", "matlab",
+    "kotlin", "swift", "go", "rust", "scala", "typescript", "php", "ruby",
+    # Web Frontend
+    "html", "css", "react", "react.js", "angular", "vue", "bootstrap", "tailwind",
+    # Backend
+    "node.js", "express.js", "django", "flask", "fastapi", "spring boot", "spring",
+    # Databases
+    "sql", "mysql", "postgresql", "mongodb", "sqlite", "redis", "oracle",
+    "nosql", "firebase",
+    # Cloud & DevOps
+    "aws", "azure", "gcp", "docker", "kubernetes", "git", "github",
+    "ci/cd", "jenkins", "linux", "terraform", "ansible",
+    # ML / Data Science
+    "machine learning", "deep learning", "nlp", "tensorflow", "pytorch",
+    "scikit-learn", "pandas", "numpy", "opencv", "keras",
+    "data analysis", "data science", "power bi", "tableau", "excel",
+    # CS Fundamentals
+    "data structures", "algorithms", "oop", "operating systems",
+    "computer networks", "dbms",
+    # Other
+    "restful api", "rest api", "microservices", "agile", "scrum",
 ]
 
 def extract_skills(text):
     text_lower = text.lower()
     found_skills = []
-    for skill in SKILLS_DB:
+    
+    for skill in sorted(SKILLS_DB, key=len, reverse=True):
         if skill in text_lower:
             found_skills.append(skill.title())
     return list(set(found_skills))
@@ -35,7 +52,6 @@ def extract_education(text):
     return list(set(found))
 
 def extract_experience(text):
-    # Find years of experience
     patterns = [
         r'(\d+)\+?\s*years?\s*of\s*experience',
         r'experience\s*of\s*(\d+)\+?\s*years?',

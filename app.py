@@ -1,11 +1,9 @@
 import streamlit as st
-import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from utils.pdf_parser import extract_text_from_pdf
 from utils.nlp_extractor import extract_skills, extract_education, extract_experience, extract_name
 from utils.scorer import calculate_score, get_grade, get_missing_skills
-from utils.recommender import load_jobs, add_manual_job, recommend_jobs
 from utils.ai_suggestions import get_ai_suggestions, get_resume_score_feedback
 
 # ─── PAGE CONFIG ───────────────────────────────────────
@@ -62,197 +60,217 @@ st.markdown("---")
 # ─── SIDEBAR ───────────────────────────────────────────
 with st.sidebar:
     st.header("⚙️ Settings")
-    job_role_filter = st.text_input("🎯 Target Job Role", placeholder="e.g. Data Scientist")
-    top_n_jobs = st.slider("📋 Number of Job Recommendations", 3, 10, 5)
     show_ai = st.toggle("🤖 Enable AI Suggestions (OpenAI)", value=True)
     st.markdown("---")
-    st.info("Upload your resume PDF and click Analyze!")
+    st.info("1️⃣ Upload your resume PDF\n\n2️⃣ Paste the Job Description\n\n3️⃣ Click **Analyze** to get results!")
 
-# ─── FILE UPLOAD ───────────────────────────────────────
-uploaded_file = st.file_uploader("📄 Upload Your Resume (PDF)", type=["pdf"])
+# ─── MAIN INPUT SECTION ────────────────────────────────
+col_left, col_right = st.columns([1, 1], gap="large")
 
-if uploaded_file:
-    with st.spinner("🔍 Analyzing your resume..."):
+with col_left:
+    st.subheader("📄 Upload Your Resume (PDF)")
+    uploaded_file = st.file_uploader("", type=["pdf"])
 
-        # Extract text
-        resume_text = extract_text_from_pdf(uploaded_file)
+with col_right:
+    st.subheader("📋 Paste Job Description")
+    job_description = st.text_area(
+        "",
+        height=200,
+        placeholder="Paste the full job description here...\n\nExample:\nWe are looking for a Data Scientist with experience in Python, Machine Learning, SQL, TensorFlow...",
+        key="jd_input"
+    )
+    job_title_input = st.text_input("🎯 Job Title (optional)", placeholder="e.g. Data Scientist at Google")
 
-        # Extract info
-        name = extract_name(resume_text)
-        skills = extract_skills(resume_text)
-        education = extract_education(resume_text)
-        experience = extract_experience(resume_text)
+st.markdown("---")
 
-        # Load jobs & recommend
-        jobs_df = load_jobs()
-        recommended_jobs = recommend_jobs(resume_text, jobs_df, top_n=top_n_jobs)
+# ─── ANALYZE BUTTON ────────────────────────────────────
+analyze_clicked = st.button("🔍 Analyze Resume", type="primary", use_container_width=True)
 
-        # Score against top job
-        if not recommended_jobs.empty:
-            skill_col = None
-            for col in ['Skills Required', 'skills', 'description', 'Job Description', 'key_skills']:
-                if col in recommended_jobs.columns:
-                    skill_col = col
-                    break
-            top_job_desc = recommended_jobs.iloc[0][skill_col] if skill_col else ""
-            top_job_title = recommended_jobs.iloc[0].get('Job Title',
-                           recommended_jobs.iloc[0].get('job_title', 'Top Role'))
-            score = calculate_score(resume_text, str(top_job_desc))
-        else:
-            score = 0
-            top_job_title = job_role_filter or "General"
+# ─── ANALYSIS LOGIC ────────────────────────────────────
+if analyze_clicked:
+    if not uploaded_file:
+        st.error("❌ Please upload your resume PDF first!")
+    elif not job_description.strip():
+        st.error("❌ Please paste a Job Description to analyze against!")
+    else:
+        with st.spinner("🔍 Analyzing your resume against the job description..."):
 
-        grade, grade_label = get_grade(score)
+            # Extract resume text
+            resume_text = extract_text_from_pdf(uploaded_file)
 
-        # Missing skills
-        required_skills_text = str(top_job_desc) if not recommended_jobs.empty else ""
-        required_skills_list = required_skills_text.lower().split()
-        missing = get_missing_skills(skills, required_skills_list[:10])
+            # Extract info from resume
+            name       = extract_name(resume_text)
+            skills     = extract_skills(resume_text)
+            education  = extract_education(resume_text)
+            experience = extract_experience(resume_text)
 
-    st.success(f"✅ Analysis Complete for **{name}**!")
-    st.markdown("---")
+            # Score against manually entered JD
+            score = calculate_score(resume_text, job_description)
+            grade, grade_label = get_grade(score)
 
-    # ─── METRICS ROW ───────────────────────────────────
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("👤 Candidate", name)
-    with col2:
-        st.metric("📊 Match Score", f"{score}%")
-    with col3:
-        st.metric("🎓 Grade", f"{grade} — {grade_label}")
-    with col4:
-        st.metric("💼 Experience", f"{experience} Years")
+            # Missing skills — scorer.py KNOWN_SKILLS se filter hoga automatically
+            missing = get_missing_skills(skills, job_description, resume_text)
 
-    st.markdown("---")
+            # Job title for display
+            top_job_title = job_title_input.strip() if job_title_input.strip() else "This Role"
 
-    # ─── TABS ──────────────────────────────────────────
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🧠 Skills Analysis",
-        "💼 Job Recommendations",
-        "🤖 AI Suggestions",
-        "📈 Score Breakdown"
-    ])
+        st.success(f"✅ Analysis Complete for **{name}**!")
+        st.markdown("---")
 
-    # TAB 1 — Skills
-    with tab1:
-        col1, col2 = st.columns(2)
+        # ─── METRICS ROW ───────────────────────────────────
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.subheader("✅ Skills Found in Resume")
-            if skills:
-                skill_html = " ".join([f'<span class="skill-badge">{s}</span>' for s in skills])
-                st.markdown(skill_html, unsafe_allow_html=True)
-            else:
-                st.warning("No skills detected. Make sure your resume has a skills section.")
-
+            st.metric("👤 Candidate", name)
         with col2:
-            st.subheader("❌ Missing Skills for Top Role")
-            if missing:
-                missing_html = " ".join([f'<span class="missing-badge">{s}</span>' for s in missing[:10]])
-                st.markdown(missing_html, unsafe_allow_html=True)
-            else:
-                st.success("Great! You have most required skills.")
+            st.metric("📊 Match Score", f"{score}%")
+        with col3:
+            st.metric("🎓 Grade", f"{grade} — {grade_label}")
+        with col4:
+            st.metric("💼 Experience", f"{experience} Years")
 
         st.markdown("---")
-        st.subheader("🎓 Education Detected")
-        if education:
-            st.write(", ".join(education))
-        else:
-            st.write("No education info detected.")
 
-    # TAB 2 — Job Recommendations
-    with tab2:
-        st.subheader(f"🏆 Top {top_n_jobs} Job Recommendations For You")
-        if not recommended_jobs.empty:
-            display_cols = ['Job Title', 'Match Score']
-            for col in ['Location', 'Experience Required', 'job_title', 'location']:
-                if col in recommended_jobs.columns:
-                    display_cols.append(col)
-            display_cols = list(dict.fromkeys(display_cols))
-            available_cols = [c for c in display_cols if c in recommended_jobs.columns]
-            st.dataframe(recommended_jobs[available_cols], use_container_width=True)
+        # ─── TABS ──────────────────────────────────────────
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "🧠 Skills Analysis",
+            "📋 JD vs Resume",
+            "🤖 AI Suggestions",
+            "📈 Score Breakdown"
+        ])
 
-            # Bar chart
-            fig = px.bar(
-                recommended_jobs,
-                x='Match Score',
-                y=recommended_jobs.get('Job Title', recommended_jobs.columns[0]),
-                orientation='h',
-                color='Match Score',
-                color_continuous_scale='viridis',
-                title="Job Match Scores"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("No job recommendations found. Check your dataset file.")
+        # ── TAB 1 — Skills ──────────────────────────────────
+        with tab1:
+            col1, col2 = st.columns(2)
 
-    # TAB 3 — AI Suggestions
-    with tab3:
-        st.subheader("🤖 AI-Powered Career Suggestions")
-        if show_ai:
-            with st.spinner("🧠 Generating AI suggestions..."):
-                feedback = get_resume_score_feedback(score, grade, name)
-                suggestions = get_ai_suggestions(resume_text, missing, top_job_title)
+            with col1:
+                st.subheader("✅ Skills Found in Your Resume")
+                if skills:
+                    skill_html = " ".join([f'<span class="skill-badge">{s}</span>' for s in skills])
+                    st.markdown(skill_html, unsafe_allow_html=True)
+                else:
+                    st.warning("No skills detected. Make sure your resume has a skills section.")
 
-            st.info(f"💬 **Score Feedback:** {feedback}")
+            with col2:
+                st.subheader("❌ Missing Skills for This Role")
+                if missing:
+                    missing_html = " ".join([f'<span class="missing-badge">{s}</span>' for s in missing[:10]])
+                    st.markdown(missing_html, unsafe_allow_html=True)
+                else:
+                    st.success("Great! You have most required skills.")
+
             st.markdown("---")
-            st.markdown(suggestions)
-        else:
-            st.info("Enable AI Suggestions from the sidebar to get personalized advice.")
+            st.subheader("🎓 Education Detected")
+            if education:
+                st.write(", ".join(education))
+            else:
+                st.write("No education info detected.")
 
-    # TAB 4 — Score Breakdown
-    with tab4:
-        st.subheader("📊 Detailed Score Analysis")
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number+delta",
-            value=score,
-            title={'text': "Resume Match Score"},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "#667eea"},
-                'steps': [
-                    {'range': [0, 25], 'color': "#e74c3c"},
-                    {'range': [25, 50], 'color': "#f39c12"},
-                    {'range': [50, 75], 'color': "#3498db"},
-                    {'range': [75, 100], 'color': "#2ecc71"}
-                ],
-                'threshold': {'line': {'color': "white", 'width': 4}, 'value': score}
-            }
-        ))
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white", height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        # ── TAB 2 — JD vs Resume ────────────────────────────
+        with tab2:
+            st.subheader(f"📋 Job Description Analysis: {top_job_title}")
 
-        # Skills pie chart
-        if skills:
-            skill_categories = {
-                "Programming": ["Python", "Java", "Javascript", "C++", "R", "Matlab"],
-                "ML/AI": ["Machine Learning", "Deep Learning", "Nlp", "Tensorflow", "Pytorch"],
-                "Data": ["Sql", "Pandas", "Numpy", "Excel", "Power Bi", "Tableau"],
-                "Web": ["Html", "Css", "React", "Node.Js", "Flask", "Django"],
-                "DevOps/Cloud": ["Docker", "Kubernetes", "Aws", "Azure", "Git"]
-            }
-            category_counts = {}
-            for cat, cat_skills in skill_categories.items():
-                count = sum(1 for s in skills if s in cat_skills)
-                if count > 0:
-                    category_counts[cat] = count
+            col_jd, col_res = st.columns(2)
 
-            if category_counts:
-                fig2 = px.pie(
-                    names=list(category_counts.keys()),
-                    values=list(category_counts.values()),
-                    title="Your Skills by Category",
-                    color_discrete_sequence=px.colors.qualitative.Set3
-                )
-                st.plotly_chart(fig2, use_container_width=True)
+            with col_jd:
+                st.markdown("**🗒️ Job Description (you entered)**")
+                st.text_area("", value=job_description, height=300, disabled=True, key="jd_display")
 
+            with col_res:
+                st.markdown("**📄 Extracted Resume Summary**")
+                resume_summary = f"""Candidate: {name}
+Experience: {experience} Years
+Education: {', '.join(education) if education else 'Not detected'}
+
+Skills:
+{', '.join(skills) if skills else 'Not detected'}
+"""
+                st.text_area("", value=resume_summary, height=300, disabled=True, key="res_display")
+
+            st.markdown("---")
+            st.markdown(f"**🎯 Overall Match with '{top_job_title}': `{score}%` ({grade} — {grade_label})**")
+
+            # Score progress bar
+            progress_color = (
+                "#2ecc71" if score >= 75 else
+                "#3498db" if score >= 50 else
+                "#f39c12" if score >= 25 else
+                "#e74c3c"
+            )
+            st.markdown(f"""
+            <div style="background:#333; border-radius:8px; height:20px; width:100%;">
+                <div style="background:{progress_color}; border-radius:8px; height:20px; width:{score}%;"></div>
+            </div>
+            <p style="color:#888; font-size:0.85rem; margin-top:4px;">0% ————————————————————— 100%</p>
+            """, unsafe_allow_html=True)
+
+        # ── TAB 3 — AI Suggestions ───────────────────────────
+        with tab3:
+            st.subheader("🤖 AI-Powered Career Suggestions")
+            if show_ai:
+                with st.spinner("🧠 Generating AI suggestions..."):
+                    feedback    = get_resume_score_feedback(score, grade, name, top_job_title)
+                    suggestions = get_ai_suggestions(resume_text, missing, top_job_title, job_description)
+                st.info(f"💬 **Score Feedback:** {feedback}")
+                st.markdown("---")
+                st.markdown(suggestions)
+            else:
+                st.info("Enable AI Suggestions from the sidebar to get personalized advice.")
+
+        # ── TAB 4 — Score Breakdown ──────────────────────────
+        with tab4:
+            st.subheader("📊 Detailed Score Analysis")
+
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number+delta",
+                value=score,
+                title={'text': "Resume Match Score"},
+                gauge={
+                    'axis': {'range': [0, 100]},
+                    'bar': {'color': "#667eea"},
+                    'steps': [
+                        {'range': [0, 25],   'color': "#e74c3c"},
+                        {'range': [25, 50],  'color': "#f39c12"},
+                        {'range': [50, 75],  'color': "#3498db"},
+                        {'range': [75, 100], 'color': "#2ecc71"}
+                    ],
+                    'threshold': {'line': {'color': "white", 'width': 4}, 'value': score}
+                }
+            ))
+            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="white", height=400)
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Skills pie chart
+            if skills:
+                skill_categories = {
+                    "Programming":  ["Python", "Java", "Javascript", "C++", "R", "Matlab"],
+                    "ML/AI":        ["Machine Learning", "Deep Learning", "Nlp", "Tensorflow", "Pytorch"],
+                    "Data":         ["Sql", "Pandas", "Numpy", "Excel", "Power Bi", "Tableau"],
+                    "Web":          ["Html", "Css", "React", "Node.Js", "Flask", "Django"],
+                    "DevOps/Cloud": ["Docker", "Kubernetes", "Aws", "Azure", "Git"]
+                }
+                category_counts = {}
+                for cat, cat_skills in skill_categories.items():
+                    count = sum(1 for s in skills if s in cat_skills)
+                    if count > 0:
+                        category_counts[cat] = count
+
+                if category_counts:
+                    fig2 = px.pie(
+                        names=list(category_counts.keys()),
+                        values=list(category_counts.values()),
+                        title="Your Skills by Category",
+                        color_discrete_sequence=px.colors.qualitative.Set3
+                    )
+                    st.plotly_chart(fig2, use_container_width=True)
+
+# ─── LANDING SCREEN ────────────────────────────────────
 else:
-    # Landing screen
     st.markdown("""
     <div style="text-align: center; padding: 3rem;">
-        <h2>👆 Upload your Resume to Get Started!</h2>
+        <h2>👆 Upload Resume + Paste Job Description → Click Analyze!</h2>
         <p style="color: #888; font-size: 1.1rem;">
-            Get instant AI-powered analysis, job recommendations,<br>
-            skill gap detection, and personalized career suggestions.
+            Get instant AI-powered analysis of how well your resume<br>
+            matches any specific job you're applying for.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -261,6 +279,6 @@ else:
     with col1:
         st.markdown("### 📄 Resume Parsing\nAutomatic extraction of skills, education & experience")
     with col2:
-        st.markdown("### 💼 Job Matching\nTop job recommendations based on your profile")
+        st.markdown("### 🎯 JD Matching\nScore your resume against any job description you paste")
     with col3:
-        st.markdown("### 🤖 AI Suggestions\nPersonalized career advice powered by OpenAI")
+        st.markdown("### 🤖 AI Suggestions\nPersonalized career advice based on skill gaps")
