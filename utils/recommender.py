@@ -3,10 +3,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def compare_resume_to_jd(resume_text, job_description):
     """
-    Resume aur manually entered Job Description ke beech
-    similarity score return karta hai (0 to 100).
-    scorer.py ka calculate_score() bhi yahi karta hai —
-    yeh function future multi-JD comparison ke liye hai.
+    It returns a similarity score (from 0 to 100) between the
+    resume and the manually entered job description.
+    The `calculate_score()` function in `scorer.py` performs
+    the same task; this function is intended for future multi-JD comparisons.
     """
     try:
         vectorizer = TfidfVectorizer(stop_words='english')

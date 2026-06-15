@@ -108,7 +108,7 @@ if analyze_clicked:
             score = calculate_score(resume_text, job_description)
             grade, grade_label = get_grade(score)
 
-            # Missing skills — scorer.py KNOWN_SKILLS se filter hoga automatically
+            # Missing skills — scorer.py will filter by Known skills automatically
             missing = get_missing_skills(skills, job_description, resume_text)
 
             # Job title for display

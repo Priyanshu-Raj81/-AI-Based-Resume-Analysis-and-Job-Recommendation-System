@@ -12,7 +12,7 @@ def get_ai_suggestions(resume_text, missing_skills, job_title="", job_descriptio
     AI se personalized suggestions generate karta hai.
     """
 
-    # JD context tab hi add karo jab available ho
+
     jd_section = f"""
 Job Description (User Provided):
 {job_description[:1500]}
@@ -50,7 +50,7 @@ Be specific, practical, and encouraging. Format with clear sections.
 
 def get_resume_score_feedback(score, grade, name, job_title=""):
     """
-    Score ke basis pe short motivating feedback deta hai.
+    It provides short, motivating feedback based on the score.
     """
     role_context = f" for the role of {job_title}" if job_title.strip() else ""
 
