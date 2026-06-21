@@ -1,11 +1,25 @@
-streamlit>=1.40.0
+# streamlit>=1.40.0
+# pandas
+# numpy
+# PyPDF2
+# python-docx
+# scikit-learn
+# nltk
+# spacy
+# openai
+# python-dotenv
+# plotly
+
+streamlit
 pandas
 numpy
-PyPDF2
-python-docx
-scikit-learn
-nltk
-spacy
-openai
-python-dotenv
 plotly
+PyPDF2
+pdfplumber
+spacy
+scikit-learn
+google-generativeai
+python-docx
+streamlit-option-menu
+python-dotenv
+gorq

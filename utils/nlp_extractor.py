@@ -1,73 +1,72 @@
-import spacy
+# import re
+# import spacy
+
+# try:
+#     nlp = spacy.load("en_core_web_sm")
+# except:
+#     import spacy.cli
+#     spacy.cli.download("en_core_web_sm")
+#     nlp = spacy.load("en_core_web_sm")
+
+# # Expanded list including standard tech and specific frameworks
+# COMMON_SKILLS = [
+#     'python', 'java', 'c++', 'c#', 'sql', 'machine learning', 'data analysis', 'aws', 'cloud', 
+#     'react', 'node.js', 'angular', 'docker', 'kubernetes', 'html', 'css', 'javascript',
+#     'django', 'flask', 'pandas', 'numpy', 'scikit-learn', 'deep learning', 'nlp', 'git',
+#     'flutter', 'dart', 'android studio', 'mobile app development', 'firebase',
+#     'information security', 'cryptography', 'rsa', 'aes', 'des', 'cybersecurity',
+#     'communication', 'project management', 'agile', 'marketing', 'sales', 'tableau'
+# ]
+
+# def extract_skills(text):
+#     text_lower = text.lower()
+#     extracted_skills = []
+    
+#     for skill in COMMON_SKILLS:
+#         if re.search(r'\b' + re.escape(skill) + r'\b', text_lower):
+#             extracted_skills.append(skill.title())
+            
+#     return list(set(extracted_skills))
+
 import re
+import spacy
 
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except:
+    import spacy.cli
+    spacy.cli.download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
 
-# ── Expanded Skills Database ─────────────────────────────────────────────────
-SKILLS_DB = [
-    # Languages
-    "python", "java", "javascript", "c++", "c#", "r", "matlab",
-    "kotlin", "swift", "go", "rust", "scala", "typescript", "php", "ruby",
-    # Web Frontend
-    "html", "css", "react", "react.js", "angular", "vue", "bootstrap", "tailwind",
-    # Backend
-    "node.js", "express.js", "django", "flask", "fastapi", "spring boot", "spring",
-    # Databases
-    "sql", "mysql", "postgresql", "mongodb", "sqlite", "redis", "oracle",
-    "nosql", "firebase",
+# ✅ Expanded & better organized skill list
+COMMON_SKILLS = [
+    # Programming Languages
+    'python', 'java', 'c++', 'c#', 'javascript', 'typescript', 'sql', 'r', 'go', 'rust',
+    # Web
+    'html', 'css', 'react', 'angular', 'node.js', 'django', 'flask', 'fastapi',
+    # Data & ML
+    'machine learning', 'deep learning', 'nlp', 'data analysis', 'pandas', 'numpy',
+    'scikit-learn', 'tensorflow', 'pytorch', 'tableau', 'power bi',
     # Cloud & DevOps
-    "aws", "azure", "gcp", "docker", "kubernetes", "git", "github",
-    "ci/cd", "jenkins", "linux", "terraform", "ansible",
-    # ML / Data Science
-    "machine learning", "deep learning", "nlp", "tensorflow", "pytorch",
-    "scikit-learn", "pandas", "numpy", "opencv", "keras",
-    "data analysis", "data science", "power bi", "tableau", "excel",
-    # CS Fundamentals
-    "data structures", "algorithms", "oop", "operating systems",
-    "computer networks", "dbms",
+    'aws', 'gcp', 'azure', 'docker', 'kubernetes', 'git', 'linux', 'cloud',
+    # Mobile
+    'flutter', 'dart', 'android studio', 'firebase', 'mobile app development',
+    # Security
+    'information security', 'cybersecurity', 'cryptography', 'rsa', 'aes', 'des',
+    # Databases
+    'mongodb', 'postgresql', 'mysql', 'redis',
+    # Soft Skills
+    'communication', 'project management', 'agile', 'leadership', 'teamwork',
     # Other
-    "restful api", "rest api", "microservices", "agile", "scrum",
+    'marketing', 'sales', 'excel', 'streamlit'
 ]
 
 def extract_skills(text):
     text_lower = text.lower()
-    found_skills = []
+    extracted_skills = []
     
-    for skill in sorted(SKILLS_DB, key=len, reverse=True):
-        if skill in text_lower:
-            found_skills.append(skill.title())
-    return list(set(found_skills))
-
-def extract_education(text):
-    education_keywords = [
-        "b.tech", "btech", "b.e", "m.tech", "mtech", "mba",
-        "bca", "mca", "b.sc", "m.sc", "phd", "bachelor",
-        "master", "degree", "12th", "10th", "diploma"
-    ]
-    found = []
-    text_lower = text.lower()
-    for keyword in education_keywords:
-        if keyword in text_lower:
-            found.append(keyword.upper())
-    return list(set(found))
-
-def extract_experience(text):
-    patterns = [
-        r'(\d+)\+?\s*years?\s*of\s*experience',
-        r'experience\s*of\s*(\d+)\+?\s*years?',
-        r'(\d+)\+?\s*years?\s*experience'
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text.lower())
-        if match:
-            return int(match.group(1))
-    return 0
-
-def extract_name(text):
-    lines = text.strip().split('\n')
-    for line in lines[:5]:
-        line = line.strip()
-        if len(line) > 2 and len(line) < 40:
-            if not any(char.isdigit() for char in line):
-                return line
-    return "Candidate"
+    for skill in COMMON_SKILLS:
+        if re.search(r'\b' + re.escape(skill) + r'\b', text_lower):
+            extracted_skills.append(skill.title())
+            
+    return list(set(extracted_skills))

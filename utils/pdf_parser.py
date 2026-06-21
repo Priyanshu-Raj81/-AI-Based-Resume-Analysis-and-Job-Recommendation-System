@@ -1,14 +1,19 @@
 import PyPDF2
-import io
+import docx
 
-def extract_text_from_pdf(uploaded_file):
+def parse_resume(uploaded_file):
     text = ""
     try:
-        reader = PyPDF2.PdfReader(uploaded_file)
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
+        if uploaded_file.name.endswith('.pdf'):
+            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+            for page in pdf_reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+        elif uploaded_file.name.endswith('.docx'):
+            doc = docx.Document(uploaded_file)
+            for para in doc.paragraphs:
+                text += para.text + "\n"
     except Exception as e:
-        text = f"Error reading PDF: {str(e)}"
-    return text.strip()
+        print(f"Error reading file: {e}")
+    return text
