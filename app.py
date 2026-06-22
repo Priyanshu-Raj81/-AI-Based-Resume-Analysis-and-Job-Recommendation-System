@@ -44,7 +44,7 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.info("Developed for your remote internship project. 🚀")
+    
 
 # --- Routing Logic ---
 if selected_page == "Home": 
