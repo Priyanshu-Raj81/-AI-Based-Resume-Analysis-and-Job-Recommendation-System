@@ -1,0 +1,151 @@
+role,growth_rate,avg_salary_lpa,job_openings,skill,skill_score
+AI Engineer,42,22,4800,Python,96
+AI Engineer,42,22,4800,Generative AI,98
+AI Engineer,42,22,4800,LangChain,92
+AI Engineer,42,22,4800,RAG,90
+AI Engineer,42,22,4800,Vector Databases,87
+LLM Engineer,45,24,3200,Python,95
+LLM Engineer,45,24,3200,Prompt Engineering,97
+LLM Engineer,45,24,3200,Fine-Tuning,93
+LLM Engineer,45,24,3200,LangChain,91
+LLM Engineer,45,24,3200,Hugging Face,89
+Prompt Engineer,50,18,2600,LLMs,96
+Prompt Engineer,50,18,2600,Prompt Design,98
+Prompt Engineer,50,18,2600,Python,85
+Prompt Engineer,50,18,2600,NLP,83
+Prompt Engineer,50,18,2600,API Integration,80
+RAG Engineer,47,23,2100,Python,94
+RAG Engineer,47,23,2100,LangChain,96
+RAG Engineer,47,23,2100,Vector Databases,95
+RAG Engineer,47,23,2100,Embeddings,92
+RAG Engineer,47,23,2100,LlamaIndex,90
+Data Scientist,28,20,5400,Python,95
+Data Scientist,28,20,5400,Machine Learning,94
+Data Scientist,28,20,5400,SQL,88
+Data Scientist,28,20,5400,Statistics,90
+Data Scientist,28,20,5400,TensorFlow,85
+Data Analyst,20,12,7800,SQL,95
+Data Analyst,20,12,7800,Python,88
+Data Analyst,20,12,7800,Tableau,87
+Data Analyst,20,12,7800,Power BI,85
+Data Analyst,20,12,7800,Excel,80
+ML Engineer,35,22,4100,Python,96
+ML Engineer,35,22,4100,PyTorch,94
+ML Engineer,35,22,4100,MLflow,91
+ML Engineer,35,22,4100,Scikit-learn,89
+ML Engineer,35,22,4100,Feature Engineering,87
+MLOps Engineer,40,24,2400,Kubeflow,92
+MLOps Engineer,40,24,2400,MLflow,94
+MLOps Engineer,40,24,2400,Docker,91
+MLOps Engineer,40,24,2400,Python,90
+MLOps Engineer,40,24,2400,CI/CD,88
+AI Product Manager,38,28,1800,Product Roadmapping,91
+AI Product Manager,38,28,1800,LLM Fundamentals,93
+AI Product Manager,38,28,1800,Agile,88
+AI Product Manager,38,28,1800,User Research,85
+AI Product Manager,38,28,1800,Data Analysis,84
+Product Manager,22,22,3600,Agile,90
+Product Manager,22,22,3600,Product Roadmapping,92
+Product Manager,22,22,3600,User Research,88
+Product Manager,22,22,3600,JIRA,85
+Product Manager,22,22,3600,Stakeholder Management,87
+Cloud Architect,35,28,3100,AWS,96
+Cloud Architect,35,28,3100,Azure,93
+Cloud Architect,35,28,3100,Terraform,92
+Cloud Architect,35,28,3100,Kubernetes,91
+Cloud Architect,35,28,3100,GCP,89
+DevOps Engineer,30,18,6200,Docker,94
+DevOps Engineer,30,18,6200,Kubernetes,95
+DevOps Engineer,30,18,6200,CI/CD,93
+DevOps Engineer,30,18,6200,Linux,91
+DevOps Engineer,30,18,6200,Ansible,88
+Site Reliability Engineer,32,22,2800,Linux,93
+Site Reliability Engineer,32,22,2800,Python,91
+Site Reliability Engineer,32,22,2800,Kubernetes,94
+Site Reliability Engineer,32,22,2800,Monitoring Tools,90
+Site Reliability Engineer,32,22,2800,SLO/SLA Design,87
+Backend Developer,22,16,9400,Java,91
+Backend Developer,22,16,9400,Python,93
+Backend Developer,22,16,9400,Node.js,90
+Backend Developer,22,16,9400,SQL,89
+Backend Developer,22,16,9400,REST APIs,92
+Frontend Developer,19,14,8600,JavaScript,94
+Frontend Developer,19,14,8600,React,96
+Frontend Developer,19,14,8600,TypeScript,91
+Frontend Developer,19,14,8600,CSS,87
+Frontend Developer,19,14,8600,Next.js,89
+Full Stack Developer,24,18,10200,JavaScript,93
+Full Stack Developer,24,18,10200,React,94
+Full Stack Developer,24,18,10200,Node.js,92
+Full Stack Developer,24,18,10200,SQL,88
+Full Stack Developer,24,18,10200,Docker,85
+Mobile App Developer,23,16,5100,Kotlin,91
+Mobile App Developer,23,16,5100,Swift,90
+Mobile App Developer,23,16,5100,React Native,92
+Mobile App Developer,23,16,5100,Firebase,87
+Mobile App Developer,23,16,5100,REST APIs,88
+Flutter Developer,28,15,4300,Dart,95
+Flutter Developer,28,15,4300,Flutter,97
+Flutter Developer,28,15,4300,Firebase,88
+Flutter Developer,28,15,4300,REST APIs,86
+Flutter Developer,28,15,4300,State Management,84
+Cyber Security Analyst,33,16,5700,Network Security,93
+Cyber Security Analyst,33,16,5700,SIEM,91
+Cyber Security Analyst,33,16,5700,Threat Analysis,94
+Cyber Security Analyst,33,16,5700,Python,87
+Cyber Security Analyst,33,16,5700,CompTIA Security+,90
+SOC Analyst,30,14,4900,SIEM,95
+SOC Analyst,30,14,4900,Incident Response,93
+SOC Analyst,30,14,4900,Threat Intelligence,91
+SOC Analyst,30,14,4900,Log Analysis,89
+SOC Analyst,30,14,4900,Splunk,90
+Penetration Tester,36,18,3200,Kali Linux,95
+Penetration Tester,36,18,3200,Metasploit,93
+Penetration Tester,36,18,3200,OWASP,94
+Penetration Tester,36,18,3200,Python,88
+Penetration Tester,36,18,3200,Burp Suite,92
+Blockchain Developer,38,22,2200,Solidity,95
+Blockchain Developer,38,22,2200,Ethereum,93
+Blockchain Developer,38,22,2200,Smart Contracts,94
+Blockchain Developer,38,22,2200,Web3.js,90
+Blockchain Developer,38,22,2200,Rust,87
+Data Engineer,32,20,5800,Python,94
+Data Engineer,32,20,5800,Apache Spark,93
+Data Engineer,32,20,5800,SQL,91
+Data Engineer,32,20,5800,Apache Kafka,90
+Data Engineer,32,20,5800,Airflow,88
+Business Intelligence Analyst,21,14,4600,Power BI,95
+Business Intelligence Analyst,21,14,4600,SQL,93
+Business Intelligence Analyst,21,14,4600,Tableau,91
+Business Intelligence Analyst,21,14,4600,DAX,88
+Business Intelligence Analyst,21,14,4600,Data Warehousing,86
+Software Engineer,20,16,14800,Data Structures,92
+Software Engineer,20,16,14800,System Design,94
+Software Engineer,20,16,14800,Java,91
+Software Engineer,20,16,14800,Python,93
+Software Engineer,20,16,14800,Git,88
+Solutions Architect,29,30,2400,AWS,95
+Solutions Architect,29,30,2400,System Design,96
+Solutions Architect,29,30,2400,Microservices,93
+Solutions Architect,29,30,2400,Security Best Practices,91
+Solutions Architect,29,30,2400,Cloud Networking,90
+Platform Engineer,31,22,2100,Kubernetes,95
+Platform Engineer,31,22,2100,Terraform,93
+Platform Engineer,31,22,2100,Go,91
+Platform Engineer,31,22,2100,CI/CD,92
+Platform Engineer,31,22,2100,Observability,89
+QA Automation Engineer,22,13,5300,Selenium,92
+QA Automation Engineer,22,13,5300,Python,90
+QA Automation Engineer,22,13,5300,Cypress,91
+QA Automation Engineer,22,13,5300,TestNG,87
+QA Automation Engineer,22,13,5300,JIRA,84
+Computer Vision Engineer,40,24,2700,Python,95
+Computer Vision Engineer,40,24,2700,OpenCV,94
+Computer Vision Engineer,40,24,2700,PyTorch,93
+Computer Vision Engineer,40,24,2700,YOLO,91
+Computer Vision Engineer,40,24,2700,Deep Learning,96
+NLP Engineer,38,23,2900,Python,95
+NLP Engineer,38,23,2900,Hugging Face,96
+NLP Engineer,38,23,2900,BERT,93
+NLP Engineer,38,23,2900,SpaCy,90
+NLP Engineer,38,23,2900,LLMs,94

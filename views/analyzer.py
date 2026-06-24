@@ -1,9 +1,10 @@
 import streamlit as st
 from utils.pdf_parser import parse_resume
-from utils.nlp_extractor import extract_skills
+from utils.nlp_extractor import extract_skills, extract_projects
 from utils.recommender import load_job_data, get_role_ats_score, recommend_jobs
 from utils.scorer import calculate_similarity_score
 from utils.ai_suggestions import generate_resume_suggestions
+
 
 def render_analyzer():
     st.title("🎯 AI Resume Analyzer")
@@ -19,28 +20,20 @@ def render_analyzer():
 
     if mode == "Target Job Role":
         target_role = st.selectbox("Target Job Role:", [
-    # Software Development
-    "Software Developer", "Backend Developer", "Frontend Developer",
-    "Full Stack Developer", "Flutter Developer", "Android Developer", "iOS Developer",
-    "Mobile App Developer",
-    # Data & AI
-    "Data Scientist", "Data Analyst", "Data Engineer", "ML Engineer",
-    "AI Engineer", "Business Analyst", "NLP Engineer", "Prompt Engineer",
-    # Cloud & DevOps
-    "DevOps Engineer", "Cloud Engineer", "Site Reliability Engineer",
-    # Security
-    "Information Security Analyst", "Cybersecurity Engineer", "Ethical Hacker",
-    # Management
-    "Product Manager", "Project Manager",
-    # Design
-    "UI UX Designer", "Graphic Designer",
-    # Emerging
-    "Blockchain Developer", "Game Developer", "AR VR Developer",
-])
+            "Software Developer", "Backend Developer", "Frontend Developer",
+            "Full Stack Developer", "Flutter Developer", "Android Developer", "iOS Developer",
+            "Mobile App Developer",
+            "Data Scientist", "Data Analyst", "Data Engineer", "ML Engineer",
+            "AI Engineer", "Business Analyst", "NLP Engineer", "Prompt Engineer",
+            "DevOps Engineer", "Cloud Engineer", "Site Reliability Engineer",
+            "Information Security Analyst", "Cybersecurity Engineer", "Ethical Hacker",
+            "Product Manager", "Project Manager",
+            "UI UX Designer", "Graphic Designer",
+            "Blockchain Developer", "Game Developer", "AR VR Developer",
+        ])
     else:
         job_desc = st.text_area("Paste JD here:", height=150)
 
-    # ✅ Experience Level added
     experience_level = st.selectbox(
         "3. Your Experience Level:",
         ["Fresher", "Mid-Level (1-3 years)", "Senior (3+ years)"],
@@ -55,15 +48,17 @@ def render_analyzer():
         with st.spinner("Analyzing..."):
             resume_text = parse_resume(uploaded_file)
             extracted_skills = extract_skills(resume_text)
+            extracted_projects = extract_projects(resume_text)
             df = load_job_data()
 
             if mode == "Target Job Role":
                 ats_score, missing_skills = get_role_ats_score(extracted_skills, target_role, df)
             else:
                 jd_skills = extract_skills(job_desc)
-                ats_score, missing_skills = calculate_similarity_score(extracted_skills, " ".join(jd_skills))
+                ats_score, missing_skills = calculate_similarity_score(
+                    extracted_skills, " ".join(jd_skills))
 
-        # ✅ Session state mein save
+        # ✅ Session state save
         if "resume_history" not in st.session_state:
             st.session_state.resume_history = []
 
@@ -73,7 +68,8 @@ def render_analyzer():
             "ats_score": ats_score,
             "role": target_role if mode == "Target Job Role" else "Custom JD",
             "skills": extracted_skills,
-            "missing": missing_skills
+            "missing": missing_skills,
+            "projects": extracted_projects,
         })
 
         st.session_state.latest_analysis = {
@@ -81,9 +77,11 @@ def render_analyzer():
             "role": target_role if mode == "Target Job Role" else "Custom JD",
             "skills": extracted_skills,
             "missing": missing_skills,
+            "missing_skills": missing_skills,
+            "projects": extracted_projects,
             "job_desc": job_desc,
             "mode": mode,
-            "experience_level": experience_level  # ✅ Save kiya
+            "experience_level": experience_level
         }
 
         st.success("✅ Analysis Complete!")
@@ -94,6 +92,34 @@ def render_analyzer():
             st.metric("ATS Match Score", f"{ats_score}%")
             st.progress(ats_score / 100)
             st.write("**Found Skills:**", ", ".join(extracted_skills))
+
+            # ✅ Projects — sirf clean message
+            if extracted_projects:
+                st.markdown("""
+                    <div style='background:rgba(79,70,229,0.1); border-left:3px solid #4f46e5;
+                                border-radius:8px; padding:12px 16px; margin-top:12px;'>
+                        <span style='color:#818cf8; font-weight:700;'>✅ Projects Analyzed</span>
+                        <br><br>
+                        <span style='color:#9aa1b1; font-size:13px;'>
+                            Your projects have been analyzed successfully. Visit
+                            <b style='color:#4f46e5;'>Interview Prep → 🎤 Mock Interview Coach</b>
+                            to get personalized questions based on your projects!
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                    <div style='background:rgba(250,204,21,0.08); border-left:3px solid #facc15;
+                                border-radius:8px; padding:12px 16px; margin-top:12px;'>
+                        <span style='color:#facc15; font-weight:700;'>💡 No Projects Found</span>
+                        <br><br>
+                        <span style='color:#9aa1b1; font-size:13px;'>
+                            No projects section detected in your resume.
+                            Add a <b style='color:#facc15;'>Projects</b> section to get
+                            project-based interview questions in the AI Coach!
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
 
         with tab2:
             st.write("### Missing Skills")
@@ -114,18 +140,15 @@ def render_analyzer():
             st.subheader("🤖 AI-Powered Resume Suggestions")
             st.write(f"Personalized recommendations for **{target_role}** at **{experience_level}** level.")
             st.markdown("---")
-
             with st.spinner("🧠 AI analyzing your resume... please wait"):
                 suggestions = generate_resume_suggestions(
                     target_role=target_role if mode == "Target Job Role" else "Custom JD Role",
                     extracted_skills=extracted_skills,
                     missing_skills=missing_skills,
                     job_desc=job_desc if mode == "Paste Job Description (JD)" else "",
-                    experience_level=experience_level  # ✅ Pass kiya
+                    experience_level=experience_level
                 )
-
             st.markdown(suggestions)
-
             st.download_button(
                 label="📥 Download AI Suggestions",
                 data=suggestions,
@@ -145,6 +168,34 @@ def render_analyzer():
             st.progress(data['ats_score'] / 100)
             st.write("**Found Skills:**", ", ".join(data['skills']))
 
+            # ✅ Projects — sirf clean message
+            if data.get("projects"):
+                st.markdown("""
+                    <div style='background:rgba(79,70,229,0.1); border-left:3px solid #4f46e5;
+                                border-radius:8px; padding:12px 16px; margin-top:12px;'>
+                        <span style='color:#818cf8; font-weight:700;'>✅ Projects Analyzed</span>
+                        <br><br>
+                        <span style='color:#9aa1b1; font-size:13px;'>
+                            Your projects have been analyzed successfully. Visit
+                            <b style='color:#4f46e5;'>Interview Prep → 🎤 Mock Interview Coach</b>
+                            to get personalized questions based on your projects!
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                    <div style='background:rgba(250,204,21,0.08); border-left:3px solid #facc15;
+                                border-radius:8px; padding:12px 16px; margin-top:12px;'>
+                        <span style='color:#facc15; font-weight:700;'>💡 No Projects Found</span>
+                        <br><br>
+                        <span style='color:#9aa1b1; font-size:13px;'>
+                            No projects section detected in your resume.
+                            Add a <b style='color:#facc15;'>Projects</b> section to get
+                            project-based interview questions in the AI Coach!
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+
         with tab2:
             if data['missing']:
                 for s in data['missing']:
@@ -155,18 +206,15 @@ def render_analyzer():
         with tab3:
             st.subheader("🤖 AI-Powered Resume Suggestions")
             st.markdown("---")
-
             with st.spinner("🧠 AI analyzing your resume..."):
                 suggestions = generate_resume_suggestions(
                     target_role=data['role'],
                     extracted_skills=data['skills'],
                     missing_skills=data['missing'],
                     job_desc=data.get('job_desc', ''),
-                    experience_level=data.get('experience_level', 'Fresher')  # ✅ Pass kiya
+                    experience_level=data.get('experience_level', 'Fresher')
                 )
-
             st.markdown(suggestions)
-
             st.download_button(
                 label="📥 Download AI Suggestions",
                 data=suggestions,

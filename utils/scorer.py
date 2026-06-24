@@ -3,7 +3,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from utils.nlp_extractor import COMMON_SKILLS
 import re
 
-# ✅ ROLE_SKILLS — har role mein sirf COMMON_SKILLS wali skills
 ROLE_SKILLS = {
     # ── Software Development ──────────────────────────────────
     "software developer": [
@@ -55,9 +54,11 @@ ROLE_SKILLS = {
         "python", "machine learning", "deep learning",
         "tensorflow", "pytorch", "docker", "scikit-learn", "aws"
     ],
+    # ✅ AI Engineer — proper skills fixed
     "ai engineer": [
         "python", "machine learning", "deep learning",
-        "nlp", "tensorflow", "pytorch", "langchain"
+        "nlp", "tensorflow", "pytorch", "langchain",
+        "transformers", "llm", "docker", "aws"
     ],
     "business analyst": [
         "sql", "excel", "tableau", "power bi",
@@ -131,13 +132,11 @@ ROLE_SKILLS = {
     ],
 }
 
+
 def get_ats_score(matched_count, total_count):
-    """Direct skill match se realistic ATS score"""
     if total_count == 0:
         return 0
-
     raw_pct = (matched_count / total_count) * 100
-
     if raw_pct >= 90:
         return min(round(raw_pct), 100)
     elif raw_pct >= 70:
@@ -151,10 +150,8 @@ def get_ats_score(matched_count, total_count):
 
 
 def find_role_match(role_key):
-    """Role ko ROLE_SKILLS mein dhundho — 3 level matching"""
     if not role_key:
         return None
-
     role_key = role_key.lower().strip()
 
     # Level 1 — Exact match
@@ -170,7 +167,6 @@ def find_role_match(role_key):
     role_words = set(role_key.split())
     best_match = None
     best_score = 0
-
     for key in ROLE_SKILLS:
         key_words = set(key.split())
         common = role_words & key_words
@@ -189,14 +185,11 @@ def calculate_similarity_score(resume_skills_list, job_skills_str, target_role="
     required_skills = find_role_match(target_role)
 
     if required_skills:
-        # ✅ Direct skill matching
         matched = [s for s in required_skills if s.lower() in resume_skills_lower]
         missing = [s for s in required_skills if s.lower() not in resume_skills_lower]
         ats_score = get_ats_score(len(matched), len(required_skills))
         missing_skills = [s.title() for s in missing[:7]]
-
     else:
-        # Fallback — TF-IDF
         if not job_skills_str:
             return 20, []
 
