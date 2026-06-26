@@ -1,73 +1,145 @@
-import streamlit as st
 import plotly.graph_objects as go
-import pandas as pd
+import streamlit as st
+
+from utils.theme import render_empty_state, render_hero, section_heading, spacer
+
+
+def _score_tone(score):
+    if score >= 70:
+        return "#4ade80", "Strong", "rm-chip-success"
+    if score >= 40:
+        return "#facc15", "Moderate", "rm-chip-warning"
+    return "#f87171", "Needs Work", "rm-chip-danger"
+
+
+def _render_stat_card(label, value):
+    st.markdown(
+        f"""
+        <div class="rm-stat fade-up">
+            <div class="rm-stat-label">{label}</div>
+            <div class="rm-stat-value">{value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_skill_bar(label, score):
+    st.markdown(
+        f"""
+        <div class="rm-skill-row">
+            <div class="rm-skill-head">
+                <span>{label}</span>
+                <span class="pct">{score}%</span>
+            </div>
+            <div class="rm-bar-bg">
+                <div class="rm-bar-fill" style="width:{score}%"></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_match_card(role, pct):
+    _, label, chip_class = _score_tone(pct)
+    st.markdown(
+        f"""
+        <div class="rm-stat fade-up">
+            <div class="rm-stat-value">{pct}%</div>
+            <div class="rm-stat-label">{role}</div>
+            <span class="rm-chip {chip_class}">{label} Match</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_skill_chips(skills, chip_class=""):
+    chips = "".join(
+        f'<span class="rm-chip {chip_class}">{skill}</span>'
+        for skill in skills
+    )
+    st.markdown(chips, unsafe_allow_html=True)
+
+
+def _render_missing_skill(skill, label, chip_class):
+    st.markdown(
+        f"""
+        <div class="rm-stat-pill">
+            <span>❌ {skill}</span>
+            <span class="rm-chip {chip_class}">{label}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_action_card(action):
+    st.markdown(
+        f"""
+        <div class="rm-job-card fade-up">
+            <div class="rm-job-head">
+                <div class="rm-job-title">{action["icon"]} {action["tag"]}</div>
+                <span class="rm-chip">{action["label"]}</span>
+            </div>
+            <div class="rm-job-meta" style="margin-top:10px;">{action["text"]}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_dashboard():
-    st.title("📊 Your Analytics Dashboard")
-    st.markdown("---")
+    render_hero(
+        "Your Analytics Dashboard",
+        "Track resume strength, career fit, skill gaps, and next actions from your latest analysis.",
+    )
+    spacer()
 
     history = st.session_state.get("resume_history", [])
     latest = st.session_state.get("latest_analysis", None)
 
     if not history:
-        st.markdown("""
-            <div style='background:#171a23; border:1px solid #2a2f3a; border-radius:12px;
-                        padding:40px; text-align:center; margin:20px 0;'>
-                <div style='font-size:48px; margin-bottom:16px;'>📄</div>
-                <h3 style='color:#e6e8ee; margin:0 0 8px;'>No Resume Analyzed Yet</h3>
-                <p style='color:#9aa1b1; margin:0;'>
-                    Go to <b style='color:#4f46e5;'>Resume Analyzer</b> →
-                    Upload your resume → Come back here!
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+        render_empty_state(
+            "📄",
+            "No Resume Analyzed Yet",
+            "Go to Resume Analyzer, upload your resume, then return here for your analytics.",
+            "Analyze Resume",
+            "Resume Analyzer",
+        )
         return
 
     latest_score = history[-1]["ats_score"]
     top_role = latest["role"] if latest else "N/A"
     experience_level = latest.get("experience_level", "Fresher") if latest else "Fresher"
 
-    # ============================================================
-    # TOP METRICS — 4 KPI Cards
-    # ============================================================
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Resumes Analyzed", len(history))
-    with col2:
-        st.metric("Latest ATS Score", f"{latest_score}%")
-    with col3:
-        st.metric("Target Role", top_role)
-    with col4:
-        st.metric("Experience Level", experience_level)
+    section_heading("Overview", "Your latest resume analysis at a glance.")
+    metric_cols = st.columns(4)
+    metrics = [
+        ("Resumes Analyzed", len(history)),
+        ("Latest ATS Score", f"{latest_score}%"),
+        ("Target Role", top_role),
+        ("Experience Level", experience_level),
+    ]
+    for col, (label, value) in zip(metric_cols, metrics):
+        with col:
+            _render_stat_card(label, value)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ============================================================
-    # ROW 1: Gauge (full width) — Skill Distribution hataya
-    # ============================================================
+    spacer(28)
     col_gauge, col_breakdown = st.columns(2)
 
     with col_gauge:
-        st.subheader("🎯 Resume Strength Meter")
-
-        if latest_score >= 70:
-            color = "#4ade80"
-            label = "Strong"
-        elif latest_score >= 40:
-            color = "#facc15"
-            label = "Moderate"
-        else:
-            color = "#f87171"
-            label = "Needs Work"
+        section_heading("Resume Strength Meter", "ATS compatibility based on your latest resume.")
+        color, label, chip_class = _score_tone(latest_score)
 
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=latest_score,
             domain={'x': [0, 1], 'y': [0, 1]},
             title={
-                'text': f"ATS Match — <b>{label}</b>",
-                'font': {'color': '#8b93ac', 'size': 15}
+                'text': f"ATS Match - <b>{label}</b>",
+                'font': {'color': '#9aa4c4', 'size': 15}
             },
             number={
                 'suffix': "%",
@@ -78,15 +150,15 @@ def render_dashboard():
                     'range': [0, 100],
                     'tickcolor': '#475569',
                     'tickwidth': 1,
-                    'tickfont': {'color': '#475569', 'size': 10},
+                    'tickfont': {'color': '#8b95b8', 'size': 10},
                     'nticks': 6,
                 },
                 'bar': {'color': color, 'thickness': 0.25},
                 'bgcolor': 'rgba(0,0,0,0)',
                 'borderwidth': 0,
                 'steps': [
-                    {'range': [0, 40],   'color': 'rgba(248,113,113,0.15)'},
-                    {'range': [40, 70],  'color': 'rgba(250,204,21,0.15)'},
+                    {'range': [0, 40], 'color': 'rgba(248,113,113,0.15)'},
+                    {'range': [40, 70], 'color': 'rgba(250,204,21,0.15)'},
                     {'range': [70, 100], 'color': 'rgba(74,222,128,0.15)'}
                 ],
                 'threshold': {
@@ -99,48 +171,22 @@ def render_dashboard():
         fig_gauge.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font={'color': '#8b93ac', 'family': 'Arial'},
+            font={'color': '#9aa4c4', 'family': 'Arial'},
             height=280,
             margin=dict(t=60, b=10, l=30, r=30),
             transition={'duration': 1500, 'easing': 'cubic-in-out'},
         )
         st.plotly_chart(fig_gauge, use_container_width=True)
+        _render_skill_bar(f"{latest_score}% ATS Match", latest_score)
+        st.markdown(
+            f'<span class="rm-chip {chip_class}">0-40 Needs Work</span>'
+            '<span class="rm-chip rm-chip-warning">40-70 Moderate</span>'
+            '<span class="rm-chip rm-chip-success">70+ Strong</span>',
+            unsafe_allow_html=True,
+        )
 
-        # ✅ Animated progress bar
-        st.markdown(f"""
-            <style>
-            @keyframes barGrow {{
-                from {{ width: 0%; }}
-                to   {{ width: {latest_score}%;
-                       box-shadow: 0 0 10px {color}80; }}
-            }}
-            .anim-bar {{ animation: barGrow 1.5s cubic-bezier(.4,0,.2,1) forwards; width:0%; }}
-            </style>
-            <div style='margin-top:4px;'>
-                <div style='display:flex; justify-content:space-between; margin-bottom:6px;'>
-                    <span style='color:#475569; font-size:11px;'>0%</span>
-                    <span style='color:{color}; font-size:12px; font-weight:700;'>
-                        {latest_score}% ATS Match
-                    </span>
-                    <span style='color:#475569; font-size:11px;'>100%</span>
-                </div>
-                <div style='background:#1e293b; border-radius:999px; height:8px; overflow:hidden;'>
-                    <div class='anim-bar'
-                         style='height:100%; background:{color}; border-radius:999px;'></div>
-                </div>
-                <div style='display:flex; justify-content:space-between; margin-top:10px;'>
-                    <span style='font-size:11px; color:#f87171;'>● 0-40 Needs Work</span>
-                    <span style='font-size:11px; color:#facc15;'>● 40-70 Moderate</span>
-                    <span style='font-size:11px; color:#4ade80;'>● 70+ Strong</span>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    # ============================================================
-    # ROW 1 RIGHT: Score Breakdown
-    # ============================================================
     with col_breakdown:
-        st.subheader("📋 Resume Score Breakdown")
+        section_heading("Resume Score Breakdown", "Signals contributing to your dashboard score.")
 
         if latest and latest["skills"]:
             skill_list = [s.lower() for s in latest["skills"]]
@@ -153,30 +199,17 @@ def render_dashboard():
             education_score = 70
 
             breakdown = {
-                "🔑 Skills Match":    skill_score,
-                "🎯 ATS Keywords":    keyword_score,
+                "🔑 Skills Match": skill_score,
+                "🎯 ATS Keywords": keyword_score,
                 "💼 Experience Level": exp_score,
-                "🎓 Education":       education_score,
+                "🎓 Education": education_score,
             }
 
             for lbl, score in breakdown.items():
-                clr = "#4ade80" if score >= 70 else "#facc15" if score >= 40 else "#f87171"
-                col_a, col_b = st.columns([3, 1])
-                with col_a:
-                    st.markdown(f"**{lbl}**")
-                    st.progress(score / 100)
-                with col_b:
-                    st.markdown(
-                        f"<h4 style='color:{clr}; margin-top:20px;'>{score}%</h4>",
-                        unsafe_allow_html=True
-                    )
+                _render_skill_bar(lbl, score)
 
-    st.markdown("---")
-
-    # ============================================================
-    # ROW 2: Career Matches (full width styled)
-    # ============================================================
-    st.subheader("💼 Top Career Matches")
+    spacer(28)
+    section_heading("Top Career Matches", "Roles aligned with the skills found in your resume.")
 
     if latest and latest["skills"]:
         skill_list = [s.lower() for s in latest["skills"]]
@@ -196,91 +229,42 @@ def render_dashboard():
 
         if top_roles:
             cols = st.columns(len(top_roles))
-            for idx, (role, pct) in enumerate(top_roles):
-                if pct >= 70:
-                    clr = "#4ade80"
-                    badge = "🔥 Strong"
-                    bg = "rgba(74,222,128,0.08)"
-                    border = "rgba(74,222,128,0.3)"
-                elif pct >= 40:
-                    clr = "#facc15"
-                    badge = "⚡ Good"
-                    bg = "rgba(250,204,21,0.08)"
-                    border = "rgba(250,204,21,0.3)"
-                else:
-                    clr = "#f87171"
-                    badge = "📌 Partial"
-                    bg = "rgba(248,113,113,0.08)"
-                    border = "rgba(248,113,113,0.3)"
-
-                with cols[idx]:
-                    st.markdown(f"""
-                        <div style='background:{bg}; border:1px solid {border};
-                                    border-radius:12px; padding:18px 14px;
-                                    text-align:center;'>
-                            <div style='color:{clr}; font-size:26px;
-                                        font-weight:800; margin-bottom:4px;'>
-                                {pct}%
-                            </div>
-                            <div style='color:#e6e8ee; font-size:13px;
-                                        font-weight:600; margin-bottom:6px;'>
-                                {role}
-                            </div>
-                            <span style='color:{clr}; font-size:11px;
-                                         font-weight:600;'>{badge}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
+            for col, (role, pct) in zip(cols, top_roles):
+                with col:
+                    _render_match_card(role, pct)
         else:
-            st.info("No strong career matches found. Try uploading an updated resume!")
+            st.markdown(
+                '<div class="rm-info">No strong career matches found. Try uploading an updated resume.</div>',
+                unsafe_allow_html=True,
+            )
 
-    st.markdown("---")
-
-    # ============================================================
-    # ROW 3: Skills Found + Missing Skills
-    # ============================================================
+    spacer(28)
     col_s1, col_s2 = st.columns(2)
 
     with col_s1:
-        st.subheader("✅ Skills Found in Resume")
+        section_heading("Skills Found in Resume", "Detected capabilities from your latest upload.")
         if latest and latest["skills"]:
-            cols = st.columns(3)
-            for i, skill in enumerate(sorted(latest["skills"])):
-                with cols[i % 3]:
-                    st.success(f"✓ {skill}")
+            _render_skill_chips(sorted(latest["skills"]), "rm-chip-success")
         else:
-            st.info("No skills detected yet.")
+            st.markdown('<div class="rm-info">No skills detected yet.</div>', unsafe_allow_html=True)
 
     with col_s2:
-        st.subheader("⚠️ Missing Skills to Learn")
+        section_heading("Missing Skills to Learn", "Prioritized gaps for stronger matches.")
         if latest and latest.get("missing"):
-            priority_colors = {0: "#f87171", 1: "#facc15", 2: "#4ade80"}
-            priority_labels = {0: "🔴 High", 1: "🟡 Medium", 2: "🟢 Low"}
+            priority_labels = {0: "High", 1: "Medium", 2: "Low"}
+            priority_classes = {0: "rm-chip-danger", 1: "rm-chip-warning", 2: "rm-chip-success"}
 
             for i, skill in enumerate(latest["missing"]):
                 priority = min(i // 2, 2)
-                clr = priority_colors[priority]
-                lbl = priority_labels[priority]
-                st.markdown(f"""
-                    <div style='background:#0f172a; border:1px solid {clr}40;
-                                border-left:3px solid {clr};
-                                border-radius:8px; padding:10px 14px; margin:5px 0;
-                                display:flex; justify-content:space-between;
-                                align-items:center;'>
-                        <span style='color:#e6e8ee; font-size:14px;'>❌ {skill}</span>
-                        <span style='color:{clr}; font-size:11px;
-                                    font-weight:700;'>{lbl}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+                _render_missing_skill(skill, priority_labels[priority], priority_classes[priority])
         else:
-            st.success("🎉 No major skill gaps found!")
+            st.markdown(
+                '<div class="rm-success-card">🎉 No major skill gaps found.</div>',
+                unsafe_allow_html=True,
+            )
 
-    st.markdown("---")
-
-    # ============================================================
-    # ROW 4: Quick Action Items
-    # ============================================================
-    st.subheader("⚡ Quick Action Items")
-    st.caption("Your most impactful next steps to get shortlisted faster:")
+    spacer(28)
+    section_heading("Quick Action Items", "Your most impactful next steps to get shortlisted faster.")
 
     if latest:
         missing = latest.get("missing", [])
@@ -289,49 +273,31 @@ def render_dashboard():
         for skill in missing[:2]:
             actions.append({
                 "icon": "📚",
-                "color": "#f87171",
-                "text": f"Learn <b>{skill}</b> — add it to your resume Skills section",
-                "tag": "High Priority"
+                "text": f"Learn <b>{skill}</b> - add it to your resume Skills section",
+                "tag": "High Priority",
+                "label": "Skill Gap",
             })
 
         actions.append({
             "icon": "🎯",
-            "color": "#4f46e5",
             "text": f"Build a project specifically for <b>{top_role}</b> role",
-            "tag": "Important"
+            "tag": "Important",
+            "label": "Project",
         })
         actions.append({
             "icon": "📝",
-            "color": "#10b981",
             "text": f"Rewrite your Resume Summary targeting <b>{top_role}</b> position",
-            "tag": "Quick Win"
+            "tag": "Quick Win",
+            "label": "Resume",
         })
         actions.append({
             "icon": "🤖",
-            "color": "#8b5cf6",
             "text": "Try <b>Mock Interview Coach</b> in Interview Prep section",
-            "tag": "Practice"
+            "tag": "Practice",
+            "label": "Interview",
         })
 
         cols = st.columns(2)
         for i, action in enumerate(actions):
             with cols[i % 2]:
-                st.markdown(f"""
-                    <div style='background:#0f172a; border:1px solid #2a2f3a;
-                                border-left:3px solid {action["color"]};
-                                border-radius:10px; padding:14px 16px; margin:6px 0;'>
-                        <div style='display:flex; justify-content:space-between;
-                                    align-items:flex-start;'>
-                            <span style='font-size:20px;'>{action["icon"]}</span>
-                            <span style='color:{action["color"]}; font-size:10px;
-                                        font-weight:700; background:{action["color"]}20;
-                                        padding:2px 8px; border-radius:20px;'>
-                                {action["tag"]}
-                            </span>
-                        </div>
-                        <p style='color:#cbd5e1; font-size:13px;
-                                  margin:8px 0 0; line-height:1.5;'>
-                            {action["text"]}
-                        </p>
-                    </div>
-                """, unsafe_allow_html=True)
+                _render_action_card(action)

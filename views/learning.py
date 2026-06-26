@@ -1,21 +1,231 @@
+import re
 import streamlit as st
 from utils.ai_suggestions import generate_learning_path
 
+
+def _inject_learning_css():
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+        .stApp {
+            background:
+                radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.18), transparent 60%),
+                radial-gradient(1000px 500px at 100% 0%, rgba(236,72,153,0.14), transparent 55%),
+                linear-gradient(160deg, #05060f 0%, #0a0f24 45%, #070b18 100%);
+            color: #e8ecf6;
+        }
+        #MainMenu, footer, header { visibility: hidden; }
+        .block-container { padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1320px; }
+
+        @keyframes fadeUp { from {opacity:0; transform:translateY(24px);} to {opacity:1; transform:translateY(0);} }
+        @keyframes gradientMove { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+        @keyframes glowPulse { 0%,100%{box-shadow:0 0 18px rgba(99,102,241,0.35);} 50%{box-shadow:0 0 38px rgba(99,102,241,0.65);} }
+        .fade-up { animation: fadeUp .7s ease both; }
+
+        .glass {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+        }
+
+        /* Hero */
+        .lp-hero {
+            position: relative; border-radius: 28px; padding: 56px 44px; overflow: hidden;
+            background: linear-gradient(120deg, #4f46e5, #7c3aed, #db2777, #4f46e5);
+            background-size: 300% 300%;
+            animation: gradientMove 12s ease infinite, glowPulse 4s ease-in-out infinite;
+            text-align: center; margin-bottom: 10px;
+        }
+        .lp-hero h1 {
+            font-size: 3rem; font-weight: 800; margin: 0;
+            background: linear-gradient(90deg,#fff,#e0e7ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1.5px;
+        }
+        .lp-hero p { font-size: 1.15rem; color: #eef0ff; margin: 14px auto 0; font-weight: 300; max-width: 760px; line-height:1.6; }
+
+        .lp-section-title { font-size:1.25rem; font-weight:700; margin:8px 0 12px; color:#eef0ff; }
+
+        /* Summary cards */
+        .sum-card {
+            padding:20px 22px; border-radius:18px; transition: transform .3s ease, box-shadow .3s ease;
+            background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.10);
+            backdrop-filter: blur(16px); box-shadow:0 8px 40px rgba(0,0,0,0.35);
+        }
+        .sum-card:hover { transform:translateY(-8px); box-shadow:0 0 34px rgba(124,58,237,0.55); border-color:rgba(165,180,252,0.6); }
+        .sum-card .ic { font-size:1.6rem; }
+        .sum-card .lbl { color:#9aa4c4; font-size:.85rem; margin-top:6px; letter-spacing:.4px; }
+        .sum-card .val { font-weight:800; font-size:1.15rem; margin-top:4px;
+            background:linear-gradient(90deg,#a5b4fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        /* Recommended skills card */
+        .rec-card { padding:20px 22px; border-radius:18px; margin-top:10px;
+            background: rgba(99,102,241,0.08); border:1px solid rgba(129,140,248,0.25); }
+        .rec-title { font-weight:700; color:#a5b4fc; margin-bottom:12px; font-size:1.05rem; }
+        .skill-chip {
+            display:inline-block; background:rgba(124,58,237,0.22); color:#dfe4f5;
+            padding:7px 16px; border-radius:20px; margin:5px; font-size:.88rem; font-weight:600;
+            border:1px solid rgba(165,180,252,0.25); transition: all .2s ease;
+        }
+        .skill-chip:hover { background:rgba(124,58,237,0.4); transform:translateY(-2px); }
+
+        /* Success card */
+        .succ-card {
+            padding:18px 22px; border-radius:16px; margin-top:14px;
+            background: linear-gradient(120deg, rgba(16,185,129,0.14), rgba(124,58,237,0.10));
+            border:1px solid rgba(52,211,153,0.35);
+        }
+        .succ-card .t { font-weight:700; color:#34d399; }
+        .succ-card .d { color:#9aa4c4; font-size:.9rem; margin-top:4px; }
+
+        /* Segmented radio */
+        div[role="radiogroup"] { gap: 14px; }
+        div[role="radiogroup"] label {
+            background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.10);
+            padding: 14px 22px; border-radius: 14px; transition: all .25s ease; font-weight:600;
+        }
+        div[role="radiogroup"] label:hover { transform: translateY(-3px); border-color: rgba(124,58,237,0.5); box-shadow:0 0 18px rgba(124,58,237,0.3); }
+        div[role="radiogroup"] label:has(input:checked) {
+            background: linear-gradient(120deg, rgba(79,70,229,0.45), rgba(219,39,119,0.30));
+            border:1px solid rgba(165,180,252,0.85); box-shadow:0 0 26px rgba(124,58,237,0.55);
+        }
+
+        /* Inputs */
+        .stSelectbox div[data-baseweb="select"] > div,
+        .stTextInput input {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: 12px !important; color:#e8ecf6 !important;
+        }
+
+        /* Primary CTA */
+        .stButton > button[kind="primary"] {
+            width:100%; border-radius:16px; padding:.95rem 1.4rem; font-weight:800; font-size:1.05rem;
+            border:1px solid rgba(255,255,255,0.15); color:#fff;
+            background: linear-gradient(90deg,#4f46e5,#7c3aed,#db2777); background-size:200% 200%;
+            transition: all .25s ease;
+        }
+        .stButton > button[kind="primary"]:hover { transform: translateY(-3px); box-shadow:0 0 32px rgba(124,58,237,0.65); border-color:#a5b4fc; }
+
+        /* Download button */
+        .stDownloadButton > button {
+            border-radius:14px; padding:.7rem 1.4rem; font-weight:700;
+            background:rgba(255,255,255,0.05); border:1px solid rgba(165,180,252,0.4); color:#e8ecf6;
+            transition: all .25s ease;
+        }
+        .stDownloadButton > button:hover { transform:translateY(-3px); box-shadow:0 0 24px rgba(124,58,237,0.5); border-color:#a5b4fc; }
+
+        /* Stepper */
+        .stepper { display:flex; align-items:center; justify-content:center; gap:0; margin:8px 0 26px; flex-wrap:wrap; }
+        .step { display:flex; flex-direction:column; align-items:center; min-width:90px; }
+        .step .dot {
+            width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-weight:800; color:#fff; background:linear-gradient(120deg,#6366f1,#ec4899);
+            box-shadow:0 0 18px rgba(124,58,237,0.6);
+        }
+        .step .nm { color:#cfd6ee; font-size:.82rem; margin-top:8px; font-weight:600; }
+        .step-line { height:3px; width:48px; background:linear-gradient(90deg,#6366f1,#ec4899); border-radius:3px; margin:0 -2px 26px; }
+
+        /* Roadmap fallback container */
+        .roadmap-wrap { padding:26px 30px; border-radius:22px; margin-top:6px; }
+        .roadmap-wrap h2 {
+            border-left:4px solid #818cf8; padding-left:12px; margin-top:22px;
+            background:linear-gradient(90deg,#a5b4fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .roadmap-wrap strong { color:#a5b4fc; }
+
+        /* Roadmap vertical timeline */
+        .tl-week { position:relative; padding-left:42px; margin-bottom:24px; }
+        .tl-week:before {
+            content:''; position:absolute; left:18px; top:38px; bottom:-24px;
+            width:2px; background:linear-gradient(180deg,#6366f1,#ec4899);
+        }
+        .tl-week:last-child:before { display:none; }
+        .tl-week-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+        .tl-badge {
+            position:absolute; left:0; width:38px; height:38px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff;
+            background:linear-gradient(120deg,#6366f1,#ec4899); box-shadow:0 0 18px rgba(124,58,237,0.6);
+        }
+        .tl-week-title {
+            font-size:1.2rem; font-weight:800;
+            background:linear-gradient(90deg,#a5b4fc,#f472b6);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .tl-week-body {
+            padding:20px 24px; border-radius:18px; transition:transform .3s ease, box-shadow .3s ease;
+        }
+        .tl-week-body:hover { transform:translateY(-4px); box-shadow:0 0 30px rgba(124,58,237,0.45); }
+        .tl-week-body h3 { color:#a5b4fc; font-size:1.02rem; margin-top:14px; }
+        .tl-week-body strong { color:#c4b5fd; }
+        .tl-week-body a { color:#818cf8; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _parse_roadmap_weeks(roadmap: str):
+    """UI-only parser. Splits the markdown roadmap into week blocks.
+    Does NOT modify backend output. Returns list of dicts."""
+    if not roadmap:
+        return []
+    parts = re.split(r'(?m)^##\s*.*?Week\s*\d+', roadmap)
+    headers = re.findall(r'(?m)^##\s*.*?(Week\s*\d+\s*:?[^\n]*)', roadmap)
+    weeks = []
+    bodies = parts[1:] if len(parts) > 1 else []
+    for i, body in enumerate(bodies):
+        title = headers[i].strip() if i < len(headers) else f"Week {i + 1}"
+        weeks.append({"num": i + 1, "title": title, "body": body.strip()})
+    return weeks
+
+
+def _render_roadmap_timeline(weeks):
+    icons = {1: "📘", 2: "📗", 3: "📙", 4: "📕"}
+    for w in weeks:
+        icon = icons.get(w["num"], "📖")
+        st.markdown('<div class="tl-week">', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="tl-week-head"><span class="tl-badge">{w["num"]}</span>'
+            f'<span class="tl-week-title">{icon} {w["title"]}</span></div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown('<div class="tl-week-body glass">', unsafe_allow_html=True)
+        st.markdown(w["body"])
+        st.markdown('</div></div>', unsafe_allow_html=True)
+
+
 def render_learning():
-    st.title("📚 AI Learning Path Generator")
-    st.write("Get a personalized 4-week roadmap to land your dream job!")
-    st.markdown("---")
+    _inject_learning_css()
+
+    # ---------- HERO ----------
+    st.markdown(
+        """
+        <div class="lp-hero fade-up">
+            <h1>AI Learning Path Generator</h1>
+            <p>Generate a personalized AI-powered career roadmap based on your resume, target role, and skill gaps.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
     # ✅ 3 Modes
+    st.markdown('<div class="lp-section-title">Choose Mode</div>', unsafe_allow_html=True)
     mode = st.radio(
         "Choose Mode:",
         ["🎯 From My Resume Analysis", "💼 By Job Role", "✍️ Custom Input"],
-        horizontal=True
+        horizontal=True,
+        label_visibility="collapsed",
     )
 
     target_role = ""
     missing_skills = None
     experience_level = "Fresher"
+
+    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
 
     # --- Mode 1: From Resume ---
     if mode == "🎯 From My Resume Analysis":
@@ -25,19 +235,39 @@ def render_learning():
             missing_skills = data.get("missing", [])
             experience_level = data.get("experience_level", "Fresher")
 
-            # Info cards
+            # Premium summary cards
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.info(f"🎯 **Role:** {target_role}")
+                st.markdown(
+                    f"""<div class="sum-card"><div class="ic">🎯</div>
+                        <div class="lbl">TARGET ROLE</div><div class="val">{target_role}</div></div>""",
+                    unsafe_allow_html=True,
+                )
             with col2:
-                st.info(f"📊 **Level:** {experience_level}")
+                st.markdown(
+                    f"""<div class="sum-card"><div class="ic">📊</div>
+                        <div class="lbl">EXPERIENCE LEVEL</div><div class="val">{experience_level}</div></div>""",
+                    unsafe_allow_html=True,
+                )
             with col3:
-                st.info(f"⚠️ **Missing Skills:** {len(missing_skills)} identified")
+                st.markdown(
+                    f"""<div class="sum-card"><div class="ic">⚠️</div>
+                        <div class="lbl">MISSING SKILLS</div><div class="val">{len(missing_skills)} identified</div></div>""",
+                    unsafe_allow_html=True,
+                )
 
             if missing_skills:
-                st.warning(f"**Skills to learn:** {', '.join(missing_skills)}")
+                chips = "".join(f"<span class='skill-chip'>{s}</span>" for s in missing_skills)
+                st.markdown(
+                    f"""<div class="rec-card"><div class="rec-title">🔥 Recommended Skills</div>{chips}</div>""",
+                    unsafe_allow_html=True,
+                )
 
-            st.success("✅ All details auto-filled from your resume analysis!")
+            st.markdown(
+                """<div class="succ-card"><div class="t">✅ Resume successfully analyzed</div>
+                    <div class="d">Your roadmap will be generated using resume insights.</div></div>""",
+                unsafe_allow_html=True,
+            )
         else:
             st.warning("⚠️ No resume analyzed yet!")
             st.info("👉 Go to **Resume Analyzer** first → Upload resume → Come back here!")
@@ -90,10 +320,10 @@ def render_learning():
         if missing_input:
             missing_skills = [s.strip() for s in missing_input.split(',')]
 
-    st.markdown("---")
+    st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
 
     # --- Generate Button ---
-    if st.button("✨ Generate My Roadmap", type="primary"):
+    if st.button("🚀 Generate Learning Roadmap", type="primary"):
         if not target_role:
             st.warning("Please enter or select a Target Job Role!")
             return
@@ -106,15 +336,42 @@ def render_learning():
             )
 
         st.success("✅ Your Personalized Roadmap is Ready!")
-        st.markdown("---")
+        st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
 
-        # ✅ Better display
-        st.markdown(f"## 🗺️ Your 4-Week Roadmap")
-        st.markdown(f"**Role:** {target_role} | **Level:** {experience_level}")
-        st.markdown("---")
-        st.markdown(roadmap)
+        # ---------- Parse weeks (UI-only) ----------
+        weeks = _parse_roadmap_weeks(roadmap)
 
-        st.markdown("---")
+        # ---------- STEPPER ----------
+        if len(weeks) >= 2:
+            steps_html = '<div class="stepper">'
+            for i in range(1, len(weeks) + 1):
+                steps_html += f'<div class="step"><div class="dot">{i}</div><div class="nm">Week {i}</div></div>'
+                if i < len(weeks):
+                    steps_html += '<div class="step-line"></div>'
+            steps_html += "</div>"
+            st.markdown('<div class="lp-section-title">Learning Progress</div>', unsafe_allow_html=True)
+            st.markdown(steps_html, unsafe_allow_html=True)
+
+        # ---------- ROADMAP HEADER ----------
+        st.markdown(
+            f"""<div class="lp-section-title" style="font-size:1.5rem;">🗺️ Your 4-Week Roadmap</div>
+                <div style="color:#9aa4c4; margin-bottom:18px;">
+                    <b style="color:#a5b4fc;">Role:</b> {target_role} &nbsp;·&nbsp;
+                    <b style="color:#a5b4fc;">Level:</b> {experience_level}
+                </div>""",
+            unsafe_allow_html=True,
+        )
+
+        # ---------- ROADMAP BODY ----------
+        if weeks:
+            _render_roadmap_timeline(weeks)
+        else:
+            # Fallback: agar format match na ho, original markdown as-is
+            st.markdown('<div class="glass roadmap-wrap">', unsafe_allow_html=True)
+            st.markdown(roadmap)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
         # ✅ Download button
         st.download_button(
