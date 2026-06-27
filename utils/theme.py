@@ -34,6 +34,192 @@ import streamlit as st
 #  PUBLIC HELPERS — Reusable UI functions called by view pages
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
+def render_job_chip(text: str, variant: str = "default") -> str:
+    """Return an HTML chip string for a skill tag.
+
+    Args:
+        text:    Skill or label text.
+        variant: "default" | "warning" | "success"
+
+    Returns:
+        HTML string — combine multiple and pass to st.markdown().
+    """
+    cls = {
+        "warning": "rm-chip rm-chip-warning",
+        "success": "rm-chip rm-chip-success",
+        "danger":  "rm-chip rm-chip-danger",
+    }.get(variant, "rm-chip")
+    return f'<span class="{cls}">{text}</span>'
+
+
+def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
+                    growth: str, score: int, color: str, badge: str,
+                    is_best: bool, required_chips: str, missing_chips: str,
+                    insight: str):
+    """Render a single job recommendation card.
+
+    All HTML is built inside theme.py so career.py stays logic-only.
+    CSS classes are guaranteed to be injected (via apply_custom_css in app.py).
+
+    Args:
+        rank:           Job rank number (1, 2, 3 ...)
+        job_title:      Job title string (special chars pre-escaped)
+        location:       Location string
+        salary_txt:     Salary display string
+        growth:         Growth outlook text
+        score:          Match score (int 0-100)
+        color:          Score color hex string
+        badge:          Badge label ("Good Match" etc.)
+        is_best:        True if this is the #1 best match
+        required_chips: Pre-built HTML string of required skill chips
+        missing_chips:  Pre-built HTML string of missing skill chips
+        insight:        AI recommendation text
+    """
+    card_class  = "rm-job-card best" if is_best else "rm-job-card"
+    best_badge  = '<div class="rm-best-badge">🏆 Best Match</div>' if is_best else ""
+
+    # Escape double-quotes and single-quotes in dynamic text
+    safe_title  = job_title.replace('"', '&quot;').replace("'", "&#39;")
+    safe_insight = insight.replace('"', '&quot;').replace("'", "&#39;")
+
+    html = (
+        f'<div class="{card_class}">' +
+        best_badge +
+        f'<div class="rm-job-head">' +
+        f'<div style="flex:1;min-width:240px;">' +
+        f'<div class="rm-job-title"><span class="rm-job-rank">#{rank}</span> {safe_title}</div>' +
+        f'<div class="rm-job-meta">📍 <b>Location:</b> {location}</div>' +
+        f'<div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>' +
+        f'<div class="rm-job-meta">📈 <b>Growth Outlook:</b> {growth}</div>' +
+        f'</div>' +
+        f'<div class="rm-score-box">' +
+        f'<div class="rm-score-num" style="color:{color};">{score}%</div>' +
+        f'<div class="rm-score-badge" style="color:{color};">{badge}</div>' +
+        f'<div class="rm-score-track"><div class="rm-score-fill" style="width:{score}%;background:{color};"></div></div>' +
+        f'</div>' +
+        f'</div>' +
+        f'<div class="rm-job-meta" style="margin-top:14px;"><b>Required Skills:</b></div>' +
+        f'<div style="margin:8px 0;">{required_chips}</div>' +
+        f'<div class="rm-job-meta" style="margin-top:12px;"><b>Missing Skills:</b></div>' +
+        f'<div style="margin:8px 0;">{missing_chips}</div>' +
+        f'<div class="rm-info">💡 <b>AI Recommendation:</b> {safe_insight}</div>' +
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_iv_band(level: str):
+    """Render a difficulty band header (Easy / Medium / Hard)."""
+    level_lower = level.lower()
+    if "hard" in level_lower:
+        cls, emoji = "rm-iv-band-hard", "🔴"
+    elif "medium" in level_lower:
+        cls, emoji = "rm-iv-band-medium", "🟡"
+    else:
+        cls, emoji = "rm-iv-band-easy", "🟢"
+    st.markdown(
+        f'<div class="rm-iv-band {cls}">{emoji} {level.upper()} QUESTIONS</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_iv_question_card(q_num: str, q_text: str, q_diff: str,
+                             q_type: str, answer: str, tip: str):
+    """Render a single interview question card with answer and tip.
+
+    Args:
+        q_num:  Question number label e.g. "Q1"
+        q_text: The question text
+        q_diff: Difficulty string e.g. "Easy", "Medium", "Hard"
+        q_type: Type string e.g. "Technical", "HR", "Conceptual"
+        answer: Answer text (empty string if none)
+        tip:    Tip text (empty string if none)
+    """
+    # Difficulty badge
+    dl = q_diff.lower()
+    if "hard" in dl:
+        diff_cls, card_border = "rm-iv-badge-hard", "#f87171"
+    elif "medium" in dl:
+        diff_cls, card_border = "rm-iv-badge-medium", "#f59e0b"
+    else:
+        diff_cls, card_border = "rm-iv-badge-easy", "#22c55e"
+
+    # Type badge
+    tl = q_type.lower()
+    if "technical" in tl:
+        type_cls = "rm-iv-badge-tech"
+    elif "hr" in tl or "behavioral" in tl:
+        type_cls = "rm-iv-badge-hr"
+    else:
+        type_cls = "rm-iv-badge-concept"
+
+    diff_badge = f'<span class="rm-iv-badge {diff_cls}">{q_diff}</span>' if q_diff else ""
+    type_badge = f'<span class="rm-iv-badge {type_cls}">{q_type}</span>' if q_type else ""
+
+    answer_html = (
+        f'<div class="rm-iv-answer">' +
+        f'<div class="rm-iv-answer-label">✅ ANSWER</div>' +
+        f'<div class="rm-iv-answer-text">{answer}</div>' +
+        f'</div>'
+    ) if answer.strip() else ""
+
+    tip_html = (
+        f'<div class="rm-iv-tip">' +
+        f'<span style="font-size:14px;flex:none;">💡</span>' +
+        f'<div class="rm-iv-tip-text">{tip}</div>' +
+        f'</div>'
+    ) if tip.strip() else ""
+
+    html = (
+        f'<div class="rm-iv-qcard" style="border-left-color:{card_border};">' +
+        f'<div class="rm-iv-qnum">{q_num}</div>' +
+        f'<div class="rm-iv-qtext">{q_text}</div>' +
+        f'<div class="rm-iv-badges">{diff_badge}{type_badge}</div>' +
+        answer_html +
+        tip_html +
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_iv_panel(icon_html: str, title: str, desc: str):
+    """Render an interview type info panel."""
+    st.markdown(
+        f'<div class="rm-iv-panel">' +
+        f'<div class="rm-iv-panel-title">{icon_html} {title}</div>' +
+        f'<div class="rm-iv-panel-desc">{desc}</div>' +
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_iv_page_header(icon_html: str, title: str, subtitle: str):
+    """Render the Interview Preparation page header."""
+    st.markdown(
+        f'<div class="rm-iv-page-header">' +
+        f'<div class="hicon">{icon_html}</div>' +
+        f'<div><h1>{title}</h1><p>{subtitle}</p></div>' +
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_iv_stat_row(stats: list):
+    """Render a row of stat boxes for resume info display.
+
+    Args:
+        stats: list of (key_label, value) tuples
+    """
+    boxes = "".join(
+        f'<div class="rm-iv-statbox"><div class="k">{k}</div><div class="v">{v}</div></div>'
+        for k, v in stats
+    )
+    st.markdown(
+        f'<div class="rm-iv-statrow">{boxes}</div>',
+        unsafe_allow_html=True,
+    )
+
 def apply_custom_css():
     """Inject the global design system CSS. Called once in app.py."""
     st.markdown(_CSS, unsafe_allow_html=True)
@@ -692,6 +878,107 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .rm-fb-text { color: var(--rm-text); font-size: .92rem; line-height: 1.6; }
 
+
+/* ================================================================
+   17. INTERVIEW QUESTION CARDS
+   ================================================================ */
+
+/* Difficulty band headers */
+.rm-iv-band {
+    border-radius: 10px; padding: 12px 18px;
+    margin: 24px 0 12px; font-weight: 700; font-size: 1rem;
+    display: flex; align-items: center; gap: 8px;
+}
+.rm-iv-band-easy   { background: rgba(22,163,74,.12);  color: #22c55e; border-left: 4px solid #22c55e; }
+.rm-iv-band-medium { background: rgba(217,119,6,.12);  color: #f59e0b; border-left: 4px solid #f59e0b; }
+.rm-iv-band-hard   { background: rgba(220,38,38,.12);  color: #f87171; border-left: 4px solid #f87171; }
+
+/* Individual question card */
+.rm-iv-qcard {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-left: 4px solid #6366f1;
+    border-radius: 14px; padding: 20px 22px;
+    margin: 10px 0 6px;
+    animation: fadeUp .4s ease both;
+}
+.rm-iv-qnum {
+    color: #6366f1; font-size: .78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+}
+.rm-iv-qtext {
+    color: #e8ecf6; font-size: 1rem; font-weight: 600;
+    line-height: 1.5; margin-bottom: 10px;
+}
+.rm-iv-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.rm-iv-badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: .72rem; font-weight: 600;
+    border: 1px solid currentColor;
+}
+.rm-iv-badge-easy    { color: #22c55e; background: rgba(22,163,74,.12); }
+.rm-iv-badge-medium  { color: #f59e0b; background: rgba(217,119,6,.12); }
+.rm-iv-badge-hard    { color: #f87171; background: rgba(220,38,38,.12); }
+.rm-iv-badge-tech    { color: #818cf8; background: rgba(129,140,248,.12); }
+.rm-iv-badge-hr      { color: #34d399; background: rgba(52,211,153,.12); }
+.rm-iv-badge-concept { color: #fb923c; background: rgba(251,146,60,.12); }
+
+/* Answer box */
+.rm-iv-answer {
+    background: rgba(22,163,74,.06);
+    border: 1px solid rgba(22,163,74,.20);
+    border-radius: 10px; padding: 14px 16px; margin-top: 10px;
+}
+.rm-iv-answer-label {
+    color: #22c55e; font-size: .74rem; font-weight: 700;
+    letter-spacing: .05em; margin-bottom: 6px;
+}
+.rm-iv-answer-text { color: #d1fae5; font-size: .9rem; line-height: 1.7; }
+
+/* Tip box */
+.rm-iv-tip {
+    background: rgba(251,191,36,.06);
+    border: 1px solid rgba(251,191,36,.18);
+    border-radius: 10px; padding: 10px 14px;
+    margin-top: 8px; display: flex; gap: 8px; align-items: flex-start;
+}
+.rm-iv-tip-text { color: #fde68a; font-size: .88rem; line-height: 1.6; }
+
+/* Info panel (interview type description) */
+.rm-iv-panel {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-left: 3px solid #6366f1;
+    border-radius: 12px; padding: 16px 18px; margin: 8px 0;
+}
+.rm-iv-panel-title { display: flex; align-items: center; gap: 8px; color: #e8ecf6; font-weight: 600; }
+.rm-iv-panel-desc  { color: #9aa4c4; font-size: .88rem; margin-top: 4px; }
+
+/* Page header */
+.rm-iv-page-header {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 16px; padding: 28px 30px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 16px;
+}
+.rm-iv-page-header .hicon {
+    width: 48px; height: 48px; border-radius: 12px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(99,102,241,0.15); color: #6366f1;
+}
+.rm-iv-page-header h1 { color: #e8ecf6; margin: 0; font-size: 1.5rem; font-weight: 700; }
+.rm-iv-page-header p  { color: #9aa4c4; margin: 4px 0 0; font-size: .92rem; }
+
+/* Resume stat row */
+.rm-iv-statrow { display: flex; gap: 14px; margin: 8px 0 4px; flex-wrap: wrap; }
+.rm-iv-statbox {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px; padding: 14px 18px; flex: 1; min-width: 120px;
+    transition: border-color .18s ease;
+}
+.rm-iv-statbox:hover { border-color: #6366f1; }
+.rm-iv-statbox .k { color: #9aa4c4; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+.rm-iv-statbox .v { color: #e8ecf6; font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
 
 /* ================================================================
    16. STREAMLIT WIDGET OVERRIDES

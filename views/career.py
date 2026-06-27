@@ -1,34 +1,33 @@
 import streamlit as st
 
 from utils.recommender import load_job_data, recommend_jobs
-from utils.theme import render_empty_state, render_hero, section_heading, spacer
-
+from utils.theme import (
+    render_empty_state, render_hero, render_job_card, render_job_chip,
+    section_heading, spacer,
+)
 
 POPULAR_SKILLS = ["Python", "Machine Learning", "SQL", "Power BI", "Deep Learning"]
 
 
 def _score_style(score: int):
     if score >= 70:
-        return "#4ade80", "Strong Match", "rm-chip-success"
+        return "#4ade80", "Strong Match"
     if score >= 40:
-        return "#facc15", "Good Match", "rm-chip-warning"
-    return "#f87171", "Partial Match", "rm-chip-danger"
+        return "#facc15", "Good Match"
+    return "#f87171", "Partial Match"
 
 
 def _split_skills(raw_skills):
     return [
-        skill.strip()
-        for skill in str(raw_skills).replace('|', ',').split(',')
-        if skill.strip()
+        s.strip()
+        for s in str(raw_skills).replace("|", ",").split(",")
+        if s.strip()
     ]
 
 
 def _missing_required_skills(required_skills, user_skills, limit=5):
     user_skill_text = " ".join(user_skills).lower()
-    return [
-        skill for skill in required_skills
-        if skill.lower() not in user_skill_text
-    ][:limit]
+    return [s for s in required_skills if s.lower() not in user_skill_text][:limit]
 
 
 def _growth_outlook(score):
@@ -42,111 +41,57 @@ def _growth_outlook(score):
 def _build_insight(job_title, required_skills, user_skills):
     req_lower = str(required_skills).lower()
     matched = [s for s in user_skills if s and s.lower() in req_lower]
-    if matched:
-        base = f"Your {', '.join(matched[:3])} skills closely align with this role."
-    else:
-        base = "This role broadly matches your profile based on overall skill similarity."
+    base = (
+        f"Your {', '.join(matched[:3])} skills closely align with this role."
+        if matched
+        else "This role broadly matches your profile based on overall skill similarity."
+    )
     return f"{base} Strengthening additional in-demand skills would further improve your match for {job_title}."
 
 
-def _render_chip_list(items, chip_class=""):
-    if not items:
-        st.markdown('<span class="rm-chip rm-chip-success">No major gaps</span>', unsafe_allow_html=True)
-        return
-
-    st.markdown(
-        "".join(f'<span class="rm-chip {chip_class}">{item}</span>' for item in items),
-        unsafe_allow_html=True,
-    )
-
-
-def _render_summary_metric(label, value):
-    st.markdown(
-        f"""
-        <div class="rm-stat fade-up">
-            <div class="rm-stat-label">{label}</div>
-            <div class="rm-stat-value">{value}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 def _render_recommendation_card(rank, row, user_skills, best_score):
-    score = int(row['Match_Score'])
-    color, badge, _ = _score_style(score)
+    score = int(row["Match_Score"])
+    color, badge = _score_style(score)
     is_best = score == best_score and rank == 1
-    required_skills = _split_skills(row['Key Skills'])
-    missing_skills = _missing_required_skills(required_skills, user_skills)
 
-    salary = row.get('Job Salary', 'N/A')
-    salary_txt = salary if str(salary) != 'nan' else 'Not Disclosed by Recruiter'
-    location = str(row.get('Location', 'N/A'))
-    job_title = str(row['Job Title'])
-    insight = _build_insight(job_title, row['Key Skills'], user_skills)
-    growth = _growth_outlook(score)
-    card_class = "rm-job-card best" if is_best else "rm-job-card"
+    required_skills = _split_skills(row["Key Skills"])
+    missing_skills  = _missing_required_skills(required_skills, user_skills)
 
-    required_chips = "".join(
-        f'<span class="rm-chip">{s}</span>' for s in required_skills[:8]
-    ) or '<span class="rm-chip">N/A</span>'
+    salary     = row.get("Job Salary", "N/A")
+    salary_txt = salary if str(salary) not in ("nan", "N/A") else "Not Disclosed by Recruiter"
+    location   = str(row.get("Location", "N/A"))
+    job_title  = str(row["Job Title"])
+    insight    = _build_insight(job_title, row["Key Skills"], user_skills)
+    growth     = _growth_outlook(score)
 
-    missing_chips = "".join(
-        f'<span class="rm-chip rm-chip-warning">{s}</span>' for s in missing_skills
-    ) or '<span class="rm-chip rm-chip-success">No major gaps</span>'
+    # Build chip strings using theme helper
+    required_chips = "".join(render_job_chip(s) for s in required_skills[:8]) \
+                     or render_job_chip("N/A")
+    missing_chips  = "".join(render_job_chip(s, "warning") for s in missing_skills) \
+                     or render_job_chip("No major gaps", "success")
 
-    # Split into smaller st.markdown calls to avoid Streamlit HTML escaping bug
-    # on dynamic content with special characters (||, /, quotes in job titles)
-
-    # Card open + header
-    st.markdown(f'''
-        <div class="{card_class}">
-    ''', unsafe_allow_html=True)
-
-    if is_best:
-        st.markdown('<div class="rm-best-badge">🏆 Best Match</div>', unsafe_allow_html=True)
-
-    # Title + meta + score box
-    st.markdown(f'''
-        <div class="rm-job-head">
-            <div style="flex:1; min-width:240px;">
-                <div class="rm-job-title">
-                    <span class="rm-job-rank">#{rank}</span>
-                    {job_title}
-                </div>
-                <div class="rm-job-meta">📍 <b>Location:</b> {location}</div>
-                <div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>
-                <div class="rm-job-meta">📈 <b>Growth Outlook:</b> {growth}</div>
-            </div>
-            <div class="rm-score-box">
-                <div class="rm-score-num" style="color:{color};">{score}%</div>
-                <div class="rm-score-badge" style="color:{color};">{badge}</div>
-                <div class="rm-score-track">
-                    <div class="rm-score-fill" style="width:{score}%; background:{color};"></div>
-                </div>
-            </div>
-        </div>
-    ''', unsafe_allow_html=True)
-
-    # Required skills
-    st.markdown('<div class="rm-job-meta" style="margin-top:14px;"><b>Required Skills:</b></div>', unsafe_allow_html=True)
-    st.markdown(f'<div>{required_chips}</div>', unsafe_allow_html=True)
-
-    # Missing skills
-    st.markdown('<div class="rm-job-meta" style="margin-top:12px;"><b>Missing Skills:</b></div>', unsafe_allow_html=True)
-    st.markdown(f'<div>{missing_chips}</div>', unsafe_allow_html=True)
-
-    # AI insight + card close
-    st.markdown(f'''
-        <div class="rm-info">💡 <b>AI Recommendation:</b> {insight}</div>
-        </div>
-    ''', unsafe_allow_html=True)
+    # Delegate all rendering to theme.py
+    render_job_card(
+        rank=rank,
+        job_title=job_title,
+        location=location,
+        salary_txt=salary_txt,
+        growth=growth,
+        score=score,
+        color=color,
+        badge=badge,
+        is_best=is_best,
+        required_chips=required_chips,
+        missing_chips=missing_chips,
+        insight=insight,
+    )
 
 
 def render_career():
     render_hero(
         "AI Job Recommendation Engine",
-        "Discover the most suitable career opportunities based on your skills, resume insights, and AI-powered matching.",
+        "Discover the most suitable career opportunities based on your skills, "
+        "resume insights, and AI-powered matching.",
     )
     spacer()
 
@@ -161,21 +106,24 @@ def render_career():
 
     section_heading("Search Jobs", "Tune your skill list and role filter to explore suitable opportunities.")
     st.markdown('<div class="rm-section-sub">Popular skills</div>', unsafe_allow_html=True)
-    _render_chip_list(POPULAR_SKILLS)
+    st.markdown(
+        "".join(render_job_chip(s) for s in POPULAR_SKILLS),
+        unsafe_allow_html=True,
+    )
 
     col1, col2 = st.columns([3, 1])
     with col1:
         user_skills_input = st.text_input(
             "🔑 Your Skills (comma-separated):",
-            value=auto_skills if auto_skills else "Python, Machine Learning, Data Analysis",
-            help="These are auto-filled from your resume. You can edit them."
+            value=auto_skills or "Python, Machine Learning, Data Analysis",
+            help="These are auto-filled from your resume. You can edit them.",
         )
     with col2:
         top_n = st.selectbox("Show Top:", [3, 5, 10], index=1)
 
     role_filter = st.text_input(
         "🎯 Filter by Role (optional):",
-        placeholder="e.g. Data Scientist, Flutter Developer, Software Engineer"
+        placeholder="e.g. Data Scientist, Flutter Developer, Software Engineer",
     )
 
     if st.button("🚀 Find Matching Jobs", type="primary"):
@@ -185,12 +133,14 @@ def render_career():
 
         progress = st.progress(0, text="Analyzing Skills...")
         with st.spinner("Scanning job market..."):
-            user_skills = [s.strip() for s in user_skills_input.split(',')]
+            user_skills = [s.strip() for s in user_skills_input.split(",")]
             progress.progress(25, text="Matching Job Profiles...")
             df = load_job_data()
 
             if role_filter.strip() and not df.empty:
-                filtered_df = df[df['Job Title'].str.contains(role_filter.strip(), case=False, na=False)]
+                filtered_df = df[
+                    df["Job Title"].str.contains(role_filter.strip(), case=False, na=False)
+                ]
                 if filtered_df.empty:
                     st.warning(f"No jobs found for '{role_filter}'. Searching all roles instead.")
                     filtered_df = df
@@ -198,52 +148,51 @@ def render_career():
                 filtered_df = df
 
             progress.progress(60, text="Calculating Compatibility...")
-
-            if not filtered_df.empty:
-                recommended = recommend_jobs(user_skills, filtered_df, top_n=top_n)
-                progress.progress(90, text="Ranking Opportunities...")
-            else:
-                recommended = None
+            recommended = recommend_jobs(user_skills, filtered_df, top_n=top_n) if not filtered_df.empty else None
             progress.progress(100, text="Generating Recommendations...")
         progress.empty()
 
         if filtered_df.empty:
-            render_empty_state(
-                "📂",
-                "Dataset not found",
-                "Please ensure the CSV is in the dataset folder.",
-            )
+            render_empty_state("📂", "Dataset not found", "Please ensure the CSV is in the dataset folder.")
             return
-
         if recommended is None or recommended.empty:
-            render_empty_state(
-                "🔍",
-                "No matching jobs found",
-                "Try different or broader skills to discover more opportunities.",
-            )
+            render_empty_state("🔍", "No matching jobs found", "Try different or broader skills.")
             return
 
-        section_heading(f"Top {len(recommended)} Matches Found", "Ranked opportunities based on your entered skills.")
-        best_score = int(recommended['Match_Score'].max())
+        section_heading(
+            f"Top {len(recommended)} Matches Found",
+            "Ranked opportunities based on your entered skills.",
+        )
+        best_score = int(recommended["Match_Score"].max())
 
         for rank, (_, row) in enumerate(recommended.iterrows(), 1):
             _render_recommendation_card(rank, row, user_skills, best_score)
 
-        avg_match = round(recommended['Match_Score'].mean())
-        best_match = int(recommended['Match_Score'].max())
+        spacer(16)
+        avg_match  = round(recommended["Match_Score"].mean())
+        best_match = int(recommended["Match_Score"].max())
 
         cols = st.columns(3)
         for col, (label, value) in zip(cols, [
-            ("Jobs Found", len(recommended)),
-            ("Best Match", f"{best_match}%"),
+            ("Jobs Found",      len(recommended)),
+            ("Best Match",      f"{best_match}%"),
             ("Avg Match Score", f"{avg_match}%"),
         ]):
             with col:
-                _render_summary_metric(label, value)
+                st.markdown(
+                    f'''<div class="rm-stat fade-up">
+                        <div class="rm-stat-label">{label}</div>
+                        <div class="rm-stat-value">{value}</div>
+                    </div>''',
+                    unsafe_allow_html=True,
+                )
 
     if "latest_analysis" in st.session_state:
         missing = st.session_state["latest_analysis"].get("missing", [])
         if missing:
             spacer(28)
             section_heading("Skills You Should Learn for Better Matches")
-            _render_chip_list([f"➕ {skill}" for skill in missing], "rm-chip-warning")
+            st.markdown(
+                "".join(render_job_chip(f"➕ {s}", "warning") for s in missing),
+                unsafe_allow_html=True,
+            )

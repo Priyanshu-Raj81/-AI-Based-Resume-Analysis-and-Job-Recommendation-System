@@ -9,6 +9,13 @@ from utils.ai_suggestions import (
 )
 from utils import coach_parsing as cp
 from utils import coach_state as cs
+from utils.theme import (
+    render_iv_band,
+    render_iv_question_card,
+    render_iv_panel,
+    render_iv_page_header,
+    render_iv_stat_row,
+)
 
 ROLES_LIST = [
     "Software Developer", "Backend Developer", "Frontend Developer",
@@ -25,165 +32,144 @@ ROLES_LIST = [
 ]
 
 ICONS = {
-    "mic":   '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
-    "target":'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-    "chart": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-    "tools": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L3 18v3h3l6.1-6.1a4 4 0 0 0 5.6-5.6l-2.5 2.5-2-2 2.5-2.5z"/></svg>',
-    "brain": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.94-.55z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.94-.55z"/></svg>',
-    "user":  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    "layers":'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+    "mic":    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+    "target": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+    "chart":  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    "tools":  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L3 18v3h3l6.1-6.1a4 4 0 0 0 5.6-5.6l-2.5 2.5-2-2 2.5-2.5z"/></svg>',
+    "brain":  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.94-.55z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.94-.55z"/></svg>',
+    "user":   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    "layers": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
 }
 
 
-def clean_text(text):
+def _clean(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'#{1,6}\s*', '', text)
-    text = re.sub(r'`(.*?)`', r'\1', text)
-    text = text.replace('- **', '').replace('**', '')
+    text = re.sub(r'\*(.*?)\*',     r'\1', text)
+    text = re.sub(r'#{1,6}\s*',     '',    text)
+    text = re.sub(r'`(.*?)`',       r'\1', text)
     return text.strip()
 
 
-# CSS is handled globally by theme.py via app.py — no per-page injection needed.
+def _badge_cls(label):
+    return {
+        "Technical": "rm-iv-badge-tech", "HR": "rm-iv-badge-hr",
+        "Behavioral": "rm-iv-badge-hr",  "Conceptual": "rm-iv-badge-concept",
+        "Easy": "rm-iv-badge-easy",      "Medium": "rm-iv-badge-medium",
+        "Hard": "rm-iv-badge-hard",
+    }.get(label, "rm-iv-badge-concept")
 
 
 # =========================================================================== #
-# QUESTION BANK MODE
+# QUESTION BANK — parse AI text → individual cards via theme
 # =========================================================================== #
-def render_question_cards(questions_text):
-    lines = questions_text.split('\n')
-    q_num = q_text = q_type = q_diff = tip_text = ""
+def _parse_and_render_questions(questions_text: str):
+    """Parse AI-generated question bank text and render each question
+    as a themed card. All rendering delegated to theme.render_iv_question_card."""
+    lines       = questions_text.split('\n')
+    q_num       = q_text = q_type = q_diff = tip_text = ""
     answer_lines = []
-    in_answer = in_tip = False
+    in_answer   = in_tip = False
 
     def flush():
         nonlocal q_num, q_text, q_type, q_diff, answer_lines, tip_text, in_answer, in_tip
         if not q_text:
             return
-        dl = q_diff.lower()
-        if 'hard' in dl:
-            diff_class, card_border = 'badge-hard', '#f87171'
-        elif 'medium' in dl:
-            diff_class, card_border = 'badge-medium', '#f59e0b'
-        else:
-            diff_class, card_border = 'badge-easy', '#22c55e'
-        tl = q_type.lower()
-        if 'technical' in tl:
-            type_class = 'badge-tech'
-        elif 'hr' in tl or 'behavioral' in tl:
-            type_class = 'badge-hr'
-        else:
-            type_class = 'badge-concept'
-        answer_html = ""
-        if answer_lines:
-            ans = clean_text(' '.join(answer_lines))
-            answer_html = f"<div class='answer-box'><div class='answer-label'>✅ ANSWER</div><div class='answer-text'>{ans}</div></div>"
-        tip_html = ""
-        if tip_text:
-            tip_html = f"<div class='tip-box'><div class='tip-icon'>💡</div><div class='tip-text'>{clean_text(tip_text)}</div></div>"
-        badge_diff = f"<span class='badge {diff_class}'>{clean_text(q_diff)}</span>" if q_diff else ""
-        badge_type = f"<span class='badge {type_class}'>{clean_text(q_type)}</span>" if q_type else ""
-        st.markdown(f"""
-            <div class='q-card fade' style='border-left-color:{card_border};'>
-                <div class='q-number'>{clean_text(q_num)}</div>
-                <div class='q-text'>{clean_text(q_text)}</div>
-                <div class='badge-row'>{badge_diff}{badge_type}</div>
-                {answer_html}{tip_html}
-            </div>""", unsafe_allow_html=True)
+        answer = _clean(' '.join(answer_lines))
+        render_iv_question_card(
+            q_num   = _clean(q_num),
+            q_text  = _clean(q_text),
+            q_diff  = _clean(q_diff),
+            q_type  = _clean(q_type),
+            answer  = answer,
+            tip     = _clean(tip_text),
+        )
         q_num = q_text = q_type = q_diff = tip_text = ""
-        answer_lines = []
+        answer_lines.clear()
         in_answer = in_tip = False
 
     for line in lines:
-        stripped = line.strip()
-        if not stripped:
+        s = line.strip()
+        if not s:
             continue
-        up = stripped.upper()
-        if '🟢' in stripped or ('EASY' in up and 'QUESTION' in up):
-            flush(); st.markdown(f"<div class='pi-band band-easy fade'>🟢 {clean_text(stripped)}</div>", unsafe_allow_html=True); in_answer=in_tip=False; continue
-        if '🟡' in stripped or ('MEDIUM' in up and 'QUESTION' in up):
-            flush(); st.markdown(f"<div class='pi-band band-medium fade'>🟡 {clean_text(stripped)}</div>", unsafe_allow_html=True); in_answer=in_tip=False; continue
-        if '🔴' in stripped or ('HARD' in up and 'QUESTION' in up):
-            flush(); st.markdown(f"<div class='pi-band band-hard fade'>🔴 {clean_text(stripped)}</div>", unsafe_allow_html=True); in_answer=in_tip=False; continue
-        q_match = re.match(r'^(\*\*)?(?:###\s*)?(Q\d+)[:\.\)]\s*(.*)', stripped)
-        if q_match:
-            flush(); q_num = q_match.group(2); q_text = q_match.group(3) or ""; in_answer=in_tip=False; continue
-        if re.search(r'\btype\b\s*:', stripped, re.I):
-            q_type = clean_text(re.split(r'type\s*:', stripped, flags=re.I, maxsplit=1)[-1]); in_answer=in_tip=False; continue
-        if re.search(r'\bdifficulty\b\s*:', stripped, re.I):
-            q_diff = clean_text(re.split(r'difficulty\s*:', stripped, flags=re.I, maxsplit=1)[-1]); in_answer=in_tip=False; continue
-        if re.search(r'✅|answer\s*:', stripped, re.I):
-            in_answer=True; in_tip=False
-            val = re.split(r'answer\s*:', stripped, flags=re.I, maxsplit=1)[-1].replace('✅','').strip()
-            if val: answer_lines.append(val)
+        up = s.upper()
+
+        # Difficulty band headers
+        if '🟢' in s or ('EASY' in up and 'QUESTION' in up):
+            flush(); render_iv_band("Easy"); in_answer = in_tip = False; continue
+        if '🟡' in s or ('MEDIUM' in up and 'QUESTION' in up):
+            flush(); render_iv_band("Medium"); in_answer = in_tip = False; continue
+        if '🔴' in s or ('HARD' in up and 'QUESTION' in up):
+            flush(); render_iv_band("Hard"); in_answer = in_tip = False; continue
+
+        # Question number + text
+        m = re.match(r'^(\*\*)?(?:###\s*)?(Q\d+)[:\.\)]\s*(.*)', s)
+        if m:
+            flush()
+            q_num = m.group(2); q_text = m.group(3) or ""
+            in_answer = in_tip = False; continue
+
+        # Metadata lines
+        if re.search(r'\btype\b\s*:', s, re.I):
+            q_type = _clean(re.split(r'type\s*:', s, flags=re.I, maxsplit=1)[-1])
+            in_answer = in_tip = False; continue
+        if re.search(r'\bdifficulty\b\s*:', s, re.I):
+            q_diff = _clean(re.split(r'difficulty\s*:', s, flags=re.I, maxsplit=1)[-1])
+            in_answer = in_tip = False; continue
+
+        # Answer block
+        if re.search(r'✅|answer\s*:', s, re.I):
+            in_answer = True; in_tip = False
+            val = re.split(r'answer\s*:', s, flags=re.I, maxsplit=1)[-1].replace('✅', '').strip()
+            if val:
+                answer_lines.append(val)
             continue
-        if re.search(r'💡|tip\s*:', stripped, re.I):
-            in_answer=False; in_tip=True
-            tip_text = re.split(r'tip\s*:', stripped, flags=re.I, maxsplit=1)[-1].replace('💡','').strip()
+
+        # Tip block
+        if re.search(r'💡|tip\s*:', s, re.I):
+            in_answer = False; in_tip = True
+            tip_text = re.split(r'tip\s*:', s, flags=re.I, maxsplit=1)[-1].replace('💡', '').strip()
             continue
-        if in_answer and q_text: answer_lines.append(stripped)
-        elif in_tip and q_text: tip_text += ' ' + stripped
+
+        # Continuation lines
+        if in_answer and q_text:
+            answer_lines.append(s)
+        elif in_tip and q_text:
+            tip_text += ' ' + s
+
     flush()
 
 
 def render_question_bank(target_role, auto_skills, experience_level):
-
-    # ✅ Session state initialize
     if "interview_type_selected" not in st.session_state:
         st.session_state.interview_type_selected = "Full interview"
 
     st.markdown("##### Interview type")
-
-    # ✅ 3 styled toggle buttons
     col1, col2, col3 = st.columns(3)
-
     with col1:
         is_full = st.session_state.interview_type_selected == "Full interview"
-        if st.button(
-            "🎯 Full Interview",
-            key="btn_full",
-            use_container_width=True,
-            type="primary" if is_full else "secondary"
-        ):
-            st.session_state.interview_type_selected = "Full interview"
-            st.rerun()
-
+        if st.button("🎯 Full Interview", key="btn_full", use_container_width=True,
+                     type="primary" if is_full else "secondary"):
+            st.session_state.interview_type_selected = "Full interview"; st.rerun()
     with col2:
         is_tech = st.session_state.interview_type_selected == "Technical only"
-        if st.button(
-            "🧠 Technical Only",
-            key="btn_tech",
-            use_container_width=True,
-            type="primary" if is_tech else "secondary"
-        ):
-            st.session_state.interview_type_selected = "Technical only"
-            st.rerun()
-
+        if st.button("🧠 Technical Only", key="btn_tech", use_container_width=True,
+                     type="primary" if is_tech else "secondary"):
+            st.session_state.interview_type_selected = "Technical only"; st.rerun()
     with col3:
         is_hr = st.session_state.interview_type_selected == "HR only"
-        if st.button(
-            "💼 HR Only",
-            key="btn_hr",
-            use_container_width=True,
-            type="primary" if is_hr else "secondary"
-        ):
-            st.session_state.interview_type_selected = "HR only"
-            st.rerun()
+        if st.button("💼 HR Only", key="btn_hr", use_container_width=True,
+                     type="primary" if is_hr else "secondary"):
+            st.session_state.interview_type_selected = "HR only"; st.rerun()
 
     interview_type = st.session_state.interview_type_selected
 
-    # ✅ Info card
     type_info = {
-        "Full interview": (ICONS["target"], "Full interview", "Technical, HR and conceptual rounds combined."),
-        "Technical only": (ICONS["brain"],  "Technical only", "Role-specific technical questions only."),
-        "HR only":        (ICONS["user"],   "HR only",        "Behavioral and situational questions with STAR answers."),
+        "Full interview": (ICONS["target"], "Full interview",  "Technical, HR and conceptual rounds combined."),
+        "Technical only": (ICONS["brain"],  "Technical only",  "Role-specific technical questions only."),
+        "HR only":        (ICONS["user"],   "HR only",         "Behavioral and situational questions with STAR answers."),
     }
     icon, title, desc = type_info[interview_type]
-    st.markdown(f"""
-        <div class='pi-info fade'>
-            <div class='t'>{icon} {title}</div>
-            <div class='d'>{desc} &nbsp;·&nbsp; 15 Easy · 15 Medium · 10 Hard = 40 questions</div>
-        </div>""", unsafe_allow_html=True)
+    render_iv_panel(icon, title, f"{desc} &nbsp;·&nbsp; 15 Easy · 15 Medium · 10 Hard = 40 questions")
 
     st.divider()
 
@@ -201,12 +187,12 @@ def render_question_bank(target_role, auto_skills, experience_level):
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Total", "40"); m2.metric("Easy", "15")
         m3.metric("Medium", "15"); m4.metric("Hard", "10")
-        st.markdown(f"""
-            <div class='pi-info fade' style='margin-top:8px;'>
-                <div class='t'>{ICONS['layers']} {target_role} · {experience_level} · {interview_type}</div>
-            </div>""", unsafe_allow_html=True)
+        render_iv_panel(
+            ICONS["layers"],
+            f"{target_role} · {experience_level} · {interview_type}", ""
+        )
         st.divider()
-        render_question_cards(questions)
+        _parse_and_render_questions(questions)
         st.divider()
         pdf_bytes = generate_pdf(
             text=questions,
@@ -217,25 +203,19 @@ def render_question_bank(target_role, auto_skills, experience_level):
             "📥 Download Questions & Answers as PDF",
             data=pdf_bytes,
             file_name=f"interview_{target_role}_{experience_level}.pdf",
-            mime="application/pdf"
+            mime="application/pdf",
         )
+
 
 # =========================================================================== #
 # MOCK INTERVIEW COACH MODE
 # =========================================================================== #
-def _badge(label):
-    cls = {"Technical": "badge-tech", "HR": "badge-hr", "Behavioral": "badge-hr",
-           "Conceptual": "badge-concept", "Easy": "badge-easy",
-           "Medium": "badge-medium", "Hard": "badge-hard"}.get(label, "badge-concept")
-    return f"<span class='badge {cls}'>{label}</span>"
-
-
 def _start_coach(target_role, experience_level, interview_type, auto_skills, num_q):
-    projects, missing = [], []
+    projects = missing = []
     if "latest_analysis" in st.session_state:
-        data = st.session_state.latest_analysis
+        data     = st.session_state.latest_analysis
         projects = data.get("projects", []) or []
-        missing = data.get("missing_skills", []) or []
+        missing  = data.get("missing_skills", []) or []
     with st.spinner("Preparing your personalized interview…"):
         raw = generate_coach_questions(
             target_role=target_role, extracted_skills=auto_skills,
@@ -262,16 +242,12 @@ def _render_final_report(target_role, experience_level):
     if not report.get("ok", True):
         st.warning("The report was generated with limited data.")
 
-    st.markdown(f"""
-        <div class='pi-header fade'>
-            <div class='icon'>{ICONS['layers']}</div>
-            <div><h1>Interview Report</h1>
-            <p>Your performance summary and improvement plan.</p></div>
-        </div>""", unsafe_allow_html=True)
+    render_iv_page_header(ICONS["layers"], "Interview Report",
+                          "Your performance summary and improvement plan.")
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Overall score", f"{report['overall_score']}/10")
-    c2.metric("Readiness", f"{report['readiness_percent']}%")
+    c1.metric("Overall score",  f"{report['overall_score']}/10")
+    c2.metric("Readiness",      f"{report['readiness_percent']}%")
     c3.metric("Recommendation", report["hiring_recommendation"])
     st.progress(min(report["readiness_percent"], 100) / 100)
     st.divider()
@@ -297,19 +273,14 @@ def _render_final_report(target_role, experience_level):
 
     st.divider()
     if st.button("🔄 Retake interview", type="primary", key="retake"):
-        cs.clear_pending()
-        cs.reset_session()
-        st.rerun()
+        cs.clear_pending(); cs.reset_session(); st.rerun()
 
 
 def render_coach(target_role, experience_level, auto_skills):
     if not cs.has_session():
-        st.markdown(f"""
-            <div class='pi-info fade'>
-                <div class='t'>{ICONS['brain']} Mock Interview Coach</div>
-                <div class='d'>A live, resume-aware interview. Answer each question,
-                get instant feedback, and receive a final report.</div>
-            </div>""", unsafe_allow_html=True)
+        render_iv_panel(ICONS["brain"], "Mock Interview Coach",
+                        "A live, resume-aware interview. Answer each question, "
+                        "get instant feedback, and receive a final report.")
         itype = st.selectbox("Interview type",
                              ["Full interview", "Technical only", "HR only"], key="coach_type")
         num_q = st.slider("Number of questions", 5, 12, 8, key="coach_numq")
@@ -321,29 +292,28 @@ def render_coach(target_role, experience_level, auto_skills):
         _render_final_report(target_role, experience_level)
         return
 
-    total = cs.total_questions()
     answered = cs.answered_count()
-    pending = cs.get_pending()
+    pending  = cs.get_pending()
 
     st.progress(cs.progress_fraction())
     pc1, pc2 = st.columns([3, 1])
-    pc1.caption(f"Question {answered + 1} of {total}")
+    pc1.caption(f"Question {answered + 1} of {cs.total_questions()}")
     pc2.metric("Avg score", f"{cs.average_score()}/10")
 
     q = cs.current_question()
     if q is None:
         s = cs.get_session()
-        if s:
-            s["finished"] = True
-        st.rerun()
-        return
+        if s: s["finished"] = True
+        st.rerun(); return
 
-    st.markdown(f"""
-        <div class='q-card fade'>
-            <div class='q-number'>Question {answered + 1}</div>
-            <div class='q-text'>{q['question']}</div>
-            <div class='badge-row'>{_badge(q['type'])}{_badge(q['difficulty'])}</div>
-        </div>""", unsafe_allow_html=True)
+    render_iv_question_card(
+        q_num  = f"Question {answered + 1}",
+        q_text = q["question"],
+        q_diff = q["difficulty"],
+        q_type = q["type"],
+        answer = "",
+        tip    = "",
+    )
 
     if pending and pending.get("q_id") == q["id"]:
         evaluation = pending["evaluation"]
@@ -351,15 +321,19 @@ def render_coach(target_role, experience_level, auto_skills):
         st.text_area("Your answer", value=pending["answer"], height=160,
                      key=f"ans_view_{q['id']}", disabled=True)
         st.markdown(
-            f"<div class='fb-box fade'><div class='answer-label' style='color:#818cf8'>FEEDBACK</div>"
-            f"<div class='fb-text'>{evaluation['feedback']}</div></div>", unsafe_allow_html=True)
+            '<div class="rm-iv-answer" style="border-color:rgba(129,140,248,.3);">'
+            '<div class="rm-iv-answer-label" style="color:#818cf8;">FEEDBACK</div>'
+            f'<div class="rm-iv-answer-text" style="color:#e0e7ff;">{evaluation["feedback"]}</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
         m = st.columns(6)
         m[0].metric("Technical", sc["technical_accuracy"])
-        m[1].metric("Comm.", sc["communication"])
-        m[2].metric("Clarity", sc["clarity"])
-        m[3].metric("Confidence", sc["confidence"])
-        m[4].metric("Problem", sc["problem_solving"])
-        m[5].metric("Depth", sc["depth"])
+        m[1].metric("Comm.",     sc["communication"])
+        m[2].metric("Clarity",   sc["clarity"])
+        m[3].metric("Confidence",sc["confidence"])
+        m[4].metric("Problem",   sc["problem_solving"])
+        m[5].metric("Depth",     sc["depth"])
         nb1, nb2 = st.columns([3, 1])
         with nb1:
             if st.button("Next question →", type="primary", key=f"next_{q['id']}"):
@@ -368,8 +342,7 @@ def render_coach(target_role, experience_level, auto_skills):
             if st.button("End interview", key=f"end_eval_{q['id']}"):
                 cs.clear_pending()
                 s = cs.get_session()
-                if s:
-                    s["finished"] = True
+                if s: s["finished"] = True
                 st.rerun()
         return
 
@@ -381,16 +354,13 @@ def render_coach(target_role, experience_level, auto_skills):
     with b2:
         skip = st.button("Skip", key=f"skip_{q['id']}")
     with b3:
-        end = st.button("End interview", key=f"end_{q['id']}")
+        end  = st.button("End interview", key=f"end_{q['id']}")
 
     if submit:
         if not (answer or "").strip():
-            st.warning("Please type an answer, or use Skip.")
-            st.stop()
-        existing = cs.get_pending()
-        if existing and existing.get("q_id") == q["id"]:
-            st.rerun()
-            return
+            st.warning("Please type an answer, or use Skip."); st.stop()
+        if (existing := cs.get_pending()) and existing.get("q_id") == q["id"]:
+            st.rerun(); return
         with st.spinner("Evaluating your answer…"):
             raw = evaluate_answer(q["question"], answer, target_role)
         evaluation = cp.parse_evaluation(raw)
@@ -398,13 +368,10 @@ def render_coach(target_role, experience_level, auto_skills):
         cs.set_pending(q["id"], answer, evaluation)
         st.rerun()
 
-    if skip:
-        cs.clear_pending(); cs.advance(); st.rerun()
-
+    if skip: cs.clear_pending(); cs.advance(); st.rerun()
     if end:
         s = cs.get_session()
-        if s:
-            s["finished"] = True
+        if s: s["finished"] = True
         st.rerun()
 
 
@@ -412,33 +379,24 @@ def render_coach(target_role, experience_level, auto_skills):
 # PAGE ENTRY
 # =========================================================================== #
 def render_interview():
-    # CSS handled globally by theme.py
+    render_iv_page_header(
+        ICONS["mic"],
+        "AI Interview Preparation",
+        "Practice with a 40-question bank or a live, resume-aware AI coach.",
+    )
 
-    # ✅ Title updated
-    st.markdown(f"""
-        <div class='pi-header fade'>
-            <div class='icon'>{ICONS['mic']}</div>
-            <div>
-                <h1>AI Interview Preparation</h1>
-                <p>Practice with a 40-question bank or a live, resume-aware AI coach.</p>
-            </div>
-        </div>""", unsafe_allow_html=True)
+    auto_role = ""; auto_skills = []; auto_level = "Fresher"
 
-    auto_role, auto_skills, auto_level = "", [], "Fresher"
     if "latest_analysis" in st.session_state:
-        data = st.session_state.latest_analysis
-        auto_role = data.get("role", "")
-        auto_skills = data.get("skills", [])
+        data       = st.session_state.latest_analysis
+        auto_role  = data.get("role", "")
+        auto_skills= data.get("skills", [])
         auto_level = data.get("experience_level", "Fresher")
-        st.markdown(f"""
-            <div class='pi-row fade'>
-                <div class='pi-stat'><div class='k'>{ICONS['target']} Target role</div>
-                    <div class='v'>{auto_role or '—'}</div></div>
-                <div class='pi-stat'><div class='k'>{ICONS['chart']} Level</div>
-                    <div class='v'>{auto_level}</div></div>
-                <div class='pi-stat'><div class='k'>{ICONS['tools']} Skills detected</div>
-                    <div class='v'>{len(auto_skills)}</div></div>
-            </div>""", unsafe_allow_html=True)
+        render_iv_stat_row([
+            (f"{ICONS['target']} Target role",    auto_role or "—"),
+            (f"{ICONS['chart']} Level",            auto_level),
+            (f"{ICONS['tools']} Skills detected",  len(auto_skills)),
+        ])
         st.success("Auto-filled from your resume analysis.")
     else:
         st.info("Tip: analyze your resume first to get personalized questions.")
@@ -455,13 +413,8 @@ def render_interview():
         experience_level = st.selectbox("Experience level", levels, index=default_level)
 
     st.divider()
-
-    mode = st.radio(
-        "Mode",
-        ["📚 Question Bank", "🎤 Mock Interview Coach"],
-        horizontal=True,
-        key="interview_mode"
-    )
+    mode = st.radio("Mode", ["📚 Question Bank", "🎤 Mock Interview Coach"],
+                    horizontal=True, key="interview_mode")
     st.divider()
 
     if mode == "📚 Question Bank":
@@ -472,4 +425,5 @@ def render_interview():
     if "latest_analysis" not in st.session_state:
         st.divider()
         st.warning("Your resume has not been analyzed yet.")
-        st.info("Upload and analyze your resume in the Resume Analyzer, then return here for personalized questions.")
+        st.info("Upload and analyze your resume in the Resume Analyzer, "
+                "then return here for personalized questions.")
