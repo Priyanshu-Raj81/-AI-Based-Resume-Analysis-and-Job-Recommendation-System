@@ -81,8 +81,18 @@ with st.sidebar:
     render_sidebar_brand()
     st.markdown("---")
 
+    # goto_page navigation fix:
+    # option_menu internally tracks its own state via key="main_menu".
+    # To override it, we must delete the widget's internal state key first,
+    # then set it — otherwise option_menu ignores our value and uses its own.
     if "goto_page" in st.session_state:
-        st.session_state["main_menu"] = st.session_state.pop("goto_page")
+        target = st.session_state.pop("goto_page")
+        # Delete option_menu's internal widget state so it re-reads our value
+        for k in list(st.session_state.keys()):
+            if k == "main_menu":
+                del st.session_state[k]
+                break
+        st.session_state["main_menu"] = target
 
     selected_page = option_menu(
         menu_title=None,

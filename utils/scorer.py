@@ -54,7 +54,6 @@ ROLE_SKILLS = {
         "python", "machine learning", "deep learning",
         "tensorflow", "pytorch", "docker", "scikit-learn", "aws"
     ],
-    # ✅ AI Engineer — proper skills fixed
     "ai engineer": [
         "python", "machine learning", "deep learning",
         "nlp", "tensorflow", "pytorch", "langchain",
@@ -134,19 +133,14 @@ ROLE_SKILLS = {
 
 
 def get_ats_score(matched_count, total_count):
+    """
+    Clean ATS score — no artificial penalties.
+    Returns actual percentage of matched skills (0–100).
+    """
     if total_count == 0:
         return 0
-    raw_pct = (matched_count / total_count) * 100
-    if raw_pct >= 90:
-        return min(round(raw_pct), 100)
-    elif raw_pct >= 70:
-        return round(raw_pct)
-    elif raw_pct >= 50:
-        return round(raw_pct - 5)
-    elif raw_pct >= 30:
-        return round(raw_pct - 10)
-    else:
-        return max(round(raw_pct), 15)
+    score = round((matched_count / total_count) * 100)
+    return min(score, 100)
 
 
 def find_role_match(role_key):
@@ -158,7 +152,7 @@ def find_role_match(role_key):
     if role_key in ROLE_SKILLS:
         return ROLE_SKILLS[role_key]
 
-    # Level 2 — Dictionary key role string mein hai
+    # Level 2 — Dictionary key contained in role string
     for key in ROLE_SKILLS:
         if key in role_key:
             return ROLE_SKILLS[key]
@@ -178,6 +172,10 @@ def find_role_match(role_key):
 
 
 def calculate_similarity_score(resume_skills_list, job_skills_str, target_role=""):
+    """
+    Returns (ats_score, missing_skills).
+    Priority: role-based matching → TF-IDF fallback → default 0.
+    """
     if not resume_skills_list:
         return 0, []
 
@@ -185,29 +183,32 @@ def calculate_similarity_score(resume_skills_list, job_skills_str, target_role="
     required_skills = find_role_match(target_role)
 
     if required_skills:
+        # Role-based matching — clean percentage, no penalties
         matched = [s for s in required_skills if s.lower() in resume_skills_lower]
         missing = [s for s in required_skills if s.lower() not in resume_skills_lower]
         ats_score = get_ats_score(len(matched), len(required_skills))
         missing_skills = [s.title() for s in missing[:7]]
+
     else:
+        # TF-IDF fallback — no artificial bonus
         if not job_skills_str:
-            return 20, []
+            return 0, []
 
         resume_skills_str = " ".join(resume_skills_lower)
         job_skills_str_lower = job_skills_str.lower()
 
-        vectorizer = TfidfVectorizer()
         try:
+            vectorizer = TfidfVectorizer()
             tfidf_matrix = vectorizer.fit_transform([resume_skills_str, job_skills_str_lower])
             match_score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-            ats_score = min(round(match_score * 100) + 25, 100)
-        except:
-            ats_score = 20
+            ats_score = min(round(match_score * 100), 100)
+        except Exception:
+            ats_score = 0
 
-        job_has_skills = []
-        for skill in COMMON_SKILLS:
-            if re.search(r'\b' + re.escape(skill) + r'\b', job_skills_str_lower):
-                job_has_skills.append(skill)
+        job_has_skills = [
+            skill for skill in COMMON_SKILLS
+            if re.search(r'\b' + re.escape(skill) + r'\b', job_skills_str_lower)
+        ]
         missing_skills = [
             s.title() for s in job_has_skills
             if s.lower() not in resume_skills_lower

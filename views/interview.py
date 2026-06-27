@@ -1,5 +1,6 @@
 import streamlit as st
 import re
+from utils.pdf_export import generate_pdf
 from utils.ai_suggestions import (
     generate_interview_questions,
     generate_coach_questions,
@@ -43,74 +44,7 @@ def clean_text(text):
     return text.strip()
 
 
-def _inject_theme():
-    st.markdown("""
-    <style>
-      :root {
-        --primary:#4f46e5; --primary-600:#4338ca; --primary-soft:rgba(79,70,229,.10);
-        --bg:#0f1117; --surface:#171a23; --surface-2:#1e222e; --border:#2a2f3a;
-        --text:#e6e8ee; --text-muted:#9aa1b1;
-        --success:#16a34a; --warning:#d97706; --danger:#dc2626;
-        --radius:12px; --gap:16px;
-      }
-      @keyframes fadeIn { from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:none;} }
-      .fade { animation: fadeIn .22s ease both; }
-      .pi-header { background:var(--surface); border:1px solid var(--border);
-        border-radius:var(--radius); padding:28px 30px; margin-bottom:24px;
-        display:flex; align-items:center; gap:16px; }
-      .pi-header .icon { width:48px; height:48px; border-radius:10px; flex:none;
-        display:flex; align-items:center; justify-content:center;
-        background:var(--primary-soft); color:var(--primary); }
-      .pi-header h1 { color:var(--text); margin:0; font-size:1.5rem; font-weight:650; letter-spacing:-.01em; }
-      .pi-header p  { color:var(--text-muted); margin:4px 0 0; font-size:.92rem; }
-      .pi-row { display:flex; gap:var(--gap); margin:8px 0 4px; }
-      .pi-stat { background:var(--surface); border:1px solid var(--border);
-        border-radius:var(--radius); padding:16px 18px; flex:1;
-        transition:border-color .18s ease, transform .18s ease; }
-      .pi-stat:hover { border-color:var(--primary); transform:translateY(-2px); }
-      .pi-stat .k { display:flex; align-items:center; gap:6px; color:var(--text-muted);
-        font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; }
-      .pi-stat .v { color:var(--text); font-size:1.25rem; font-weight:650; margin-top:6px; }
-      .pi-info { background:var(--surface); border:1px solid var(--border);
-        border-left:3px solid var(--primary); border-radius:var(--radius);
-        padding:16px 18px; margin:8px 0; }
-      .pi-info .t { display:flex; align-items:center; gap:8px; color:var(--text); font-weight:600; }
-      .pi-info .d { color:var(--text-muted); font-size:.88rem; margin-top:4px; }
-      div.stButton > button[kind="primary"] { background:var(--primary); color:#fff;
-        border:1px solid var(--primary-600); border-radius:10px; font-weight:600;
-        padding:12px 22px; width:100%; transition:background .15s ease, transform .12s ease; }
-      div.stButton > button[kind="primary"]:hover { background:var(--primary-600); }
-      div.stButton > button[kind="primary"]:active { transform:translateY(1px); }
-      .pi-band { border-radius:10px; padding:12px 16px; margin:20px 0 8px; font-weight:700; font-size:1rem; }
-      .band-easy   { background:rgba(22,163,74,.12);  color:#22c55e; border-left:4px solid #22c55e; }
-      .band-medium { background:rgba(217,119,6,.12);  color:#f59e0b; border-left:4px solid #f59e0b; }
-      .band-hard   { background:rgba(220,38,38,.12);  color:#f87171; border-left:4px solid #f87171; }
-      .q-card { background:var(--surface-2); border:1px solid var(--border);
-        border-left:4px solid var(--primary); border-radius:10px; padding:16px 18px; margin:10px 0 4px; }
-      .q-number { color:var(--primary); font-size:.8rem; font-weight:700;
-        text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
-      .q-text { color:var(--text); font-size:1rem; font-weight:600; line-height:1.5; }
-      .badge-row { display:flex; gap:8px; margin:8px 0 0; flex-wrap:wrap; }
-      .badge { padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600; border:1px solid currentColor; }
-      .badge-easy   { color:#22c55e; background:rgba(22,163,74,.12); }
-      .badge-medium { color:#f59e0b; background:rgba(217,119,6,.12); }
-      .badge-hard   { color:#f87171; background:rgba(220,38,38,.12); }
-      .badge-tech   { color:#818cf8; background:rgba(129,140,248,.12); }
-      .badge-hr     { color:#34d399; background:rgba(52,211,153,.12); }
-      .badge-concept{ color:#fb923c; background:rgba(251,146,60,.12); }
-      .answer-box { background:rgba(22,163,74,.06); border:1px solid rgba(22,163,74,.2);
-        border-radius:8px; padding:12px 16px; margin:10px 0 6px; }
-      .answer-label { color:#22c55e; font-size:.75rem; font-weight:700; letter-spacing:.04em; margin-bottom:6px; }
-      .answer-text  { color:#d1fae5; font-size:.92rem; line-height:1.7; }
-      .tip-box { background:rgba(251,191,36,.06); border:1px solid rgba(251,191,36,.2);
-        border-radius:8px; padding:10px 14px; margin:4px 0 8px; display:flex; gap:8px; align-items:flex-start; }
-      .tip-icon { color:#fbbf24; font-size:14px; flex:none; margin-top:1px; }
-      .tip-text { color:#fde68a; font-size:.88rem; line-height:1.6; }
-      .fb-box { background:var(--surface-2); border:1px solid var(--border);
-        border-left:4px solid var(--primary); border-radius:10px; padding:14px 16px; margin:10px 0; }
-      .fb-text { color:var(--text); font-size:.92rem; line-height:1.6; }
-    </style>
-    """, unsafe_allow_html=True)
+# CSS is handled globally by theme.py via app.py — no per-page injection needed.
 
 
 # =========================================================================== #
@@ -274,11 +208,16 @@ def render_question_bank(target_role, auto_skills, experience_level):
         st.divider()
         render_question_cards(questions)
         st.divider()
+        pdf_bytes = generate_pdf(
+            text=questions,
+            title="Interview Questions & Answers",
+            subtitle=f"{target_role}  ·  {experience_level}  ·  {interview_type}"
+        )
         st.download_button(
-            "📥 Download all questions and answers",
-            data=questions,
-            file_name=f"interview_{target_role}_{experience_level}.txt",
-            mime="text/plain"
+            "📥 Download Questions & Answers as PDF",
+            data=pdf_bytes,
+            file_name=f"interview_{target_role}_{experience_level}.pdf",
+            mime="application/pdf"
         )
 
 # =========================================================================== #
@@ -473,7 +412,7 @@ def render_coach(target_role, experience_level, auto_skills):
 # PAGE ENTRY
 # =========================================================================== #
 def render_interview():
-    _inject_theme()
+    # CSS handled globally by theme.py
 
     # ✅ Title updated
     st.markdown(f"""

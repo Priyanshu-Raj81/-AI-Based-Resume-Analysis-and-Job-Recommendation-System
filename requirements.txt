@@ -22,5 +22,6 @@ google-generativeai
 python-docx
 streamlit-option-menu
 python-dotenv
-gorq
+groq
 fpdf2
+reportlab

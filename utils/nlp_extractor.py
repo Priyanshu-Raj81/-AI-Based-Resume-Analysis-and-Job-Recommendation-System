@@ -96,8 +96,8 @@ def extract_projects(text):
         r'medlock|ridelo|genai)', re.I
     )
 
-    # ✅ Step 1: Pehle lines ko join karo jo split ho gayi hain
-    # PDF mein long titles wrap hoti hain — unhe join karo
+    # Step 1: Join lines that were split across multiple lines in the PDF
+    # Long titles in PDFs often wrap — merge them back into one line
     joined_lines = []
     i = 0
     while i < len(lines):
@@ -107,8 +107,8 @@ def extract_projects(text):
             i += 1
             continue
 
-        # ✅ Agar line open bracket ke saath khatam ho — next line join karo
-        # e.g. "GenAI Chatbot (LangChain Project" — closing ) missing
+        # If a line ends with an open bracket, join the next line to close it
+        # e.g. "GenAI Chatbot (LangChain Project" — missing closing parenthesis
         open_brackets = line.count('(') - line.count(')')
         while open_brackets > 0 and i + 1 < len(lines):
             i += 1
@@ -117,14 +117,14 @@ def extract_projects(text):
                 line = line + ' ' + next_line
                 open_brackets = line.count('(') - line.count(')')
 
-        # ✅ Agar line incomplete lagti hai aur next line continuation hai
-        # e.g. "RideLo - Vehicle Rental Web Application (Full" + "Stack Project)"
-        # Already handled by bracket check above
+        # Handle multi-line continuation (already covered by bracket check above)
+#
+
 
         joined_lines.append(line)
         i += 1
 
-    # ✅ Step 2: Ab joined lines se projects extract karo
+    # Step 2: Extract project titles from the joined lines
     for raw in joined_lines:
         line = raw.strip()
         if not line:
@@ -167,7 +167,7 @@ def extract_projects(text):
         comma_count = title.count(',')
         has_project_keyword = bool(project_indicators.search(title))
 
-        if (5 < len(title) < 100  # ✅ 100 tak allow karo joined titles ke liye
+        if (5 < len(title) < 100  # Allow up to 100 chars to support joined multi-line titles
                 and not title.isdigit()
                 and word_count >= 2
                 and comma_count <= 1

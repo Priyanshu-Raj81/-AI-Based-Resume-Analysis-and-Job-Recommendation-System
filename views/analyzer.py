@@ -1,4 +1,5 @@
 import streamlit as st
+from utils.pdf_export import generate_pdf
 
 from utils.ai_suggestions import generate_resume_suggestions
 from utils.nlp_extractor import extract_projects, extract_skills
@@ -105,11 +106,17 @@ def _render_suggestions(target_role, extracted_skills, missing_skills,
     st.markdown('<div class="rm-glass">', unsafe_allow_html=True)
     st.markdown(suggestions)
     st.markdown('</div>', unsafe_allow_html=True)
+    _role = target_role or "Resume"
+    pdf_bytes = generate_pdf(
+        text=suggestions,
+        title="AI Resume Suggestions",
+        subtitle=f"{_role}  ·  {experience_level}"
+    )
     st.download_button(
-        label="📥 Download AI Suggestions",
-        data=suggestions,
-        file_name=download_name,
-        mime="text/plain"
+        label="📥 Download AI Suggestions as PDF",
+        data=pdf_bytes,
+        file_name=download_name.replace(".txt", ".pdf"),
+        mime="application/pdf"
     )
 
 

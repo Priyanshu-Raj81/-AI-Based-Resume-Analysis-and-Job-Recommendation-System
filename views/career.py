@@ -78,48 +78,69 @@ def _render_recommendation_card(rank, row, user_skills, best_score):
     is_best = score == best_score and rank == 1
     required_skills = _split_skills(row['Key Skills'])
     missing_skills = _missing_required_skills(required_skills, user_skills)
+
     salary = row.get('Job Salary', 'N/A')
-    salary_txt = salary if str(salary) != 'nan' else 'Not disclosed'
-    location = row.get('Location', 'N/A')
-    insight = _build_insight(row['Job Title'], row['Key Skills'], user_skills)
-    best_badge = '<div class="rm-best-badge">🏆 Best Match</div>' if is_best else ''
+    salary_txt = salary if str(salary) != 'nan' else 'Not Disclosed by Recruiter'
+    location = str(row.get('Location', 'N/A'))
+    job_title = str(row['Job Title'])
+    insight = _build_insight(job_title, row['Key Skills'], user_skills)
+    growth = _growth_outlook(score)
+    card_class = "rm-job-card best" if is_best else "rm-job-card"
+
     required_chips = "".join(
-        f'<span class="rm-chip">{skill}</span>'
-        for skill in required_skills[:8]
-    )
+        f'<span class="rm-chip">{s}</span>' for s in required_skills[:8]
+    ) or '<span class="rm-chip">N/A</span>'
+
     missing_chips = "".join(
-        f'<span class="rm-chip rm-chip-warning">{skill}</span>'
-        for skill in missing_skills
+        f'<span class="rm-chip rm-chip-warning">{s}</span>' for s in missing_skills
     ) or '<span class="rm-chip rm-chip-success">No major gaps</span>'
 
-    st.markdown(
-        f"""
-        <div class="rm-job-card {'best' if is_best else ''}">
-            <div class="rm-job-head">
-                <div style="flex:1; min-width:240px;">
-                    {best_badge}
-                    <div class="rm-job-title"><span class="rm-job-rank">#{rank}</span>{row['Job Title']}</div>
-                    <div class="rm-job-meta">📍 <b>Location:</b> {location}</div>
-                    <div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>
-                    <div class="rm-job-meta">📈 <b>Growth Outlook:</b> {_growth_outlook(score)}</div>
+    # Split into smaller st.markdown calls to avoid Streamlit HTML escaping bug
+    # on dynamic content with special characters (||, /, quotes in job titles)
+
+    # Card open + header
+    st.markdown(f'''
+        <div class="{card_class}">
+    ''', unsafe_allow_html=True)
+
+    if is_best:
+        st.markdown('<div class="rm-best-badge">🏆 Best Match</div>', unsafe_allow_html=True)
+
+    # Title + meta + score box
+    st.markdown(f'''
+        <div class="rm-job-head">
+            <div style="flex:1; min-width:240px;">
+                <div class="rm-job-title">
+                    <span class="rm-job-rank">#{rank}</span>
+                    {job_title}
                 </div>
-                <div class="rm-score-box">
-                    <div class="rm-score-num" style="color:{color};">{score}%</div>
-                    <div class="rm-score-badge" style="color:{color};">{badge}</div>
-                    <div class="rm-score-track">
-                        <div class="rm-score-fill" style="width:{score}%; background:{color};"></div>
-                    </div>
+                <div class="rm-job-meta">📍 <b>Location:</b> {location}</div>
+                <div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>
+                <div class="rm-job-meta">📈 <b>Growth Outlook:</b> {growth}</div>
+            </div>
+            <div class="rm-score-box">
+                <div class="rm-score-num" style="color:{color};">{score}%</div>
+                <div class="rm-score-badge" style="color:{color};">{badge}</div>
+                <div class="rm-score-track">
+                    <div class="rm-score-fill" style="width:{score}%; background:{color};"></div>
                 </div>
             </div>
-            <div class="rm-job-meta" style="margin-top:14px;"><b>Required Skills:</b></div>
-            <div>{required_chips}</div>
-            <div class="rm-job-meta" style="margin-top:12px;"><b>Missing Skills:</b></div>
-            <div>{missing_chips}</div>
-            <div class="rm-info">💡 <b>AI Recommendation:</b> {insight}</div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    ''', unsafe_allow_html=True)
+
+    # Required skills
+    st.markdown('<div class="rm-job-meta" style="margin-top:14px;"><b>Required Skills:</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div>{required_chips}</div>', unsafe_allow_html=True)
+
+    # Missing skills
+    st.markdown('<div class="rm-job-meta" style="margin-top:12px;"><b>Missing Skills:</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div>{missing_chips}</div>', unsafe_allow_html=True)
+
+    # AI insight + card close
+    st.markdown(f'''
+        <div class="rm-info">💡 <b>AI Recommendation:</b> {insight}</div>
+        </div>
+    ''', unsafe_allow_html=True)
 
 
 def render_career():

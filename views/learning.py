@@ -1,6 +1,7 @@
 import re
 import streamlit as st
 from utils.ai_suggestions import generate_learning_path
+from utils.pdf_export import generate_pdf
 
 
 def _inject_learning_css():
@@ -172,29 +173,89 @@ def _parse_roadmap_weeks(roadmap: str):
     Does NOT modify backend output. Returns list of dicts."""
     if not roadmap:
         return []
-    parts = re.split(r'(?m)^##\s*.*?Week\s*\d+', roadmap)
+    parts = re.split(r'(?m)^##\s*.*?Week\s*\d+[^\n]*', roadmap)
     headers = re.findall(r'(?m)^##\s*.*?(Week\s*\d+\s*:?[^\n]*)', roadmap)
     weeks = []
     bodies = parts[1:] if len(parts) > 1 else []
     for i, body in enumerate(bodies):
         title = headers[i].strip() if i < len(headers) else f"Week {i + 1}"
-        weeks.append({"num": i + 1, "title": title, "body": body.strip()})
+        body_clean = body.strip()
+        # Strip duplicate title line AI sometimes repeats at top of body
+        # e.g. ": Fundamentals of Java and Android Basics"
+        body_clean = re.sub(r'^\s*:\s*[^\n]+\n', '', body_clean)
+        weeks.append({"num": i + 1, "title": title, "body": body_clean.strip()})
     return weeks
+
+
+def _md_to_html(text: str) -> str:
+    """Convert basic markdown to HTML for inline rendering inside st.markdown blocks."""
+    # Bold
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Headings ### and ##
+    text = re.sub(r'(?m)^###\s+(.*?)$', r'<h4 style="color:#a5b4fc;margin:14px 0 6px;">\1</h4>', text)
+    text = re.sub(r'(?m)^##\s+(.*?)$',  r'<h3 style="color:#a5b4fc;margin:16px 0 8px;">\1</h3>', text)
+    # Links [text](url)
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" style="color:#818cf8;">\1</a>', text)
+    # Bullet lines starting with -
+    lines = text.split("\n")
+    out, in_ul = [], False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("- ") or stripped.startswith("* "):
+            if not in_ul:
+                out.append('<ul style="margin:6px 0 10px 18px;padding:0;">')
+                in_ul = True
+            out.append(f'<li style="color:#cfd6ee;margin:4px 0;line-height:1.6;">{stripped[2:]}</li>')
+        else:
+            if in_ul:
+                out.append("</ul>")
+                in_ul = False
+            if stripped:
+                out.append(f'<p style="color:#cfd6ee;margin:6px 0;line-height:1.6;">{stripped}</p>')
+    if in_ul:
+        out.append("</ul>")
+    return "\n".join(out)
 
 
 def _render_roadmap_timeline(weeks):
     icons = {1: "📘", 2: "📗", 3: "📙", 4: "📕"}
-    for w in weeks:
+    connector = (
+        '<div style="margin-left:60px;width:2px;height:24px;'
+        'background:linear-gradient(180deg,#6366f1,#ec4899);"></div>'
+    )
+    for idx, w in enumerate(weeks):
         icon = icons.get(w["num"], "📖")
-        st.markdown('<div class="tl-week">', unsafe_allow_html=True)
-        st.markdown(
-            f'<div class="tl-week-head"><span class="tl-badge">{w["num"]}</span>'
-            f'<span class="tl-week-title">{icon} {w["title"]}</span></div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown('<div class="tl-week-body glass">', unsafe_allow_html=True)
-        st.markdown(w["body"])
-        st.markdown('</div></div>', unsafe_allow_html=True)
+        body_html = _md_to_html(w["body"])
+
+        card_html = f"""
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:0;">
+            <!-- Badge + line -->
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+                <div style="width:42px;height:42px;border-radius:50%;display:flex;align-items:center;
+                    justify-content:center;font-weight:800;color:#fff;font-size:1rem;
+                    background:linear-gradient(120deg,#6366f1,#ec4899);
+                    box-shadow:0 0 18px rgba(124,58,237,0.6);">{w["num"]}</div>
+            </div>
+            <!-- Content -->
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:1.15rem;font-weight:800;margin-bottom:12px;
+                    background:linear-gradient(90deg,#a5b4fc,#f472b6);
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+                    {icon} {w["title"]}
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);
+                    backdrop-filter:blur(16px);border-radius:18px;padding:22px 26px;
+                    box-shadow:0 8px 40px rgba(0,0,0,0.35);transition:transform .3s ease;">
+                    {body_html}
+                </div>
+            </div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
+
+        # Connector line between weeks (not after last)
+        if idx < len(weeks) - 1:
+            st.markdown(connector, unsafe_allow_html=True)
 
 
 def render_learning():
@@ -302,7 +363,7 @@ def render_learning():
             experience_level = st.selectbox("Experience Level:", [
                 "Fresher", "Mid-Level (1-3 years)", "Senior (3+ years)"
             ])
-        # missing_skills = None — AI khud decide karega
+        # missing_skills = None — AI will decide based on role
 
     # --- Mode 3: Custom ---
     else:
@@ -366,7 +427,7 @@ def render_learning():
         if weeks:
             _render_roadmap_timeline(weeks)
         else:
-            # Fallback: agar format match na ho, original markdown as-is
+            # Fallback: if week format is not detected, render raw markdown
             st.markdown('<div class="glass roadmap-wrap">', unsafe_allow_html=True)
             st.markdown(roadmap)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -374,9 +435,14 @@ def render_learning():
         st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
         # ✅ Download button
+        pdf_bytes = generate_pdf(
+            text=roadmap,
+            title="AI Learning Roadmap",
+            subtitle=f"{target_role}  ·  {experience_level}"
+        )
         st.download_button(
-            label="📥 Download Roadmap",
-            data=roadmap,
-            file_name=f"roadmap_{target_role}_{experience_level}.txt",
-            mime="text/plain"
+            label="📥 Download Roadmap as PDF",
+            data=pdf_bytes,
+            file_name=f"roadmap_{target_role}_{experience_level}.pdf",
+            mime="application/pdf"
         )
