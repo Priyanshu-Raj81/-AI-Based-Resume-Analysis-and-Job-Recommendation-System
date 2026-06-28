@@ -277,7 +277,7 @@ def render_learning():
     st.markdown('<div class="lp-section-title">Choose Mode</div>', unsafe_allow_html=True)
     mode = st.radio(
         "Choose Mode:",
-        ["🎯 From My Resume Analysis", "💼 By Job Role", "✍️ Custom Input"],
+        ["From My Resume Analysis", "By Job Role", "Custom Input"],
         horizontal=True,
         label_visibility="collapsed",
     )
@@ -289,7 +289,7 @@ def render_learning():
     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
 
     # --- Mode 1: From Resume ---
-    if mode == "🎯 From My Resume Analysis":
+    if mode == "From My Resume Analysis":
         if "latest_analysis" in st.session_state:
             data = st.session_state.latest_analysis
             target_role = data.get("role", "")
@@ -335,7 +335,7 @@ def render_learning():
             return
 
     # --- Mode 2: By Job Role ---
-    elif mode == "💼 By Job Role":
+    elif mode == "By Job Role":
         st.info("💡 Just select your target role and experience level — AI will decide what to learn!")
 
         col1, col2 = st.columns(2)
@@ -384,7 +384,7 @@ def render_learning():
     st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
 
     # --- Generate Button ---
-    if st.button("🚀 Generate Learning Roadmap", type="primary"):
+    if st.button("Generate Learning Roadmap", type="primary"):
         if not target_role:
             st.warning("Please enter or select a Target Job Role!")
             return
@@ -446,3 +446,4 @@ def render_learning():
             file_name=f"roadmap_{target_role}_{experience_level}.pdf",
             mime="application/pdf"
         )
+

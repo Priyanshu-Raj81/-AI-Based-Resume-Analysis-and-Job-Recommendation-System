@@ -147,17 +147,17 @@ def render_question_bank(target_role, auto_skills, experience_level):
     col1, col2, col3 = st.columns(3)
     with col1:
         is_full = st.session_state.interview_type_selected == "Full interview"
-        if st.button("🎯 Full Interview", key="btn_full", use_container_width=True,
+        if st.button("Full Interview", key="btn_full", use_container_width=True,
                      type="primary" if is_full else "secondary"):
             st.session_state.interview_type_selected = "Full interview"; st.rerun()
     with col2:
         is_tech = st.session_state.interview_type_selected == "Technical only"
-        if st.button("🧠 Technical Only", key="btn_tech", use_container_width=True,
+        if st.button("Technical Only", key="btn_tech", use_container_width=True,
                      type="primary" if is_tech else "secondary"):
             st.session_state.interview_type_selected = "Technical only"; st.rerun()
     with col3:
         is_hr = st.session_state.interview_type_selected == "HR only"
-        if st.button("💼 HR Only", key="btn_hr", use_container_width=True,
+        if st.button("HR Only", key="btn_hr", use_container_width=True,
                      type="primary" if is_hr else "secondary"):
             st.session_state.interview_type_selected = "HR only"; st.rerun()
 
@@ -284,7 +284,7 @@ def render_coach(target_role, experience_level, auto_skills):
         itype = st.selectbox("Interview type",
                              ["Full interview", "Technical only", "HR only"], key="coach_type")
         num_q = st.slider("Number of questions", 5, 12, 8, key="coach_numq")
-        if st.button("🚀 Start mock interview", type="primary", key="coach_start"):
+        if st.button("Start mock interview", type="primary", key="coach_start"):
             _start_coach(target_role, experience_level, itype, auto_skills, num_q)
         return
 
@@ -413,11 +413,11 @@ def render_interview():
         experience_level = st.selectbox("Experience level", levels, index=default_level)
 
     st.divider()
-    mode = st.radio("Mode", ["📚 Question Bank", "🎤 Mock Interview Coach"],
+    mode = st.radio("Mode", ["Question Bank", "Mock Interview Coach"],
                     horizontal=True, key="interview_mode")
     st.divider()
 
-    if mode == "📚 Question Bank":
+    if mode == "Question Bank":
         render_question_bank(target_role, auto_skills, experience_level)
     else:
         render_coach(target_role, experience_level, auto_skills)

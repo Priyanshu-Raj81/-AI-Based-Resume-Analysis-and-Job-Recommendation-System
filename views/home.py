@@ -6,131 +6,6 @@ CSV_PATH = "dataset/career_trends.csv"
 REQUIRED_COLUMNS = ["role", "growth_rate", "avg_salary_lpa", "job_openings", "skill", "skill_score"]
 
 
-def inject_css():
-    st.markdown(
-        """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-        html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-
-        .stApp {
-            background:
-                radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.18), transparent 60%),
-                radial-gradient(1000px 500px at 100% 0%, rgba(236,72,153,0.14), transparent 55%),
-                linear-gradient(160deg, #05060f 0%, #0a0f24 45%, #070b18 100%);
-            color: #e8ecf6;
-        }
-        #MainMenu, footer, header { visibility: hidden; }
-        .block-container { padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1320px; }
-
-        @keyframes fadeUp { from {opacity:0; transform:translateY(24px);} to {opacity:1; transform:translateY(0);} }
-        @keyframes floatY { 0%{transform:translateY(0);} 50%{transform:translateY(-18px);} 100%{transform:translateY(0);} }
-        @keyframes gradientMove { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
-        @keyframes glowPulse { 0%,100%{box-shadow:0 0 18px rgba(99,102,241,0.35);} 50%{box-shadow:0 0 38px rgba(99,102,241,0.65);} }
-        @keyframes fillBar { from {width:0%;} }
-
-        .fade-up { animation: fadeUp .7s ease both; }
-
-        .glass {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.10);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.35);
-        }
-
-        .hero {
-            position: relative; border-radius: 28px; padding: 84px 40px; overflow: hidden;
-            background: linear-gradient(120deg, #4f46e5, #7c3aed, #db2777, #4f46e5);
-            background-size: 300% 300%;
-            animation: gradientMove 12s ease infinite, glowPulse 4s ease-in-out infinite;
-            text-align: center; margin-top: 8px;
-        }
-        .hero h1 {
-            font-size: 4.2rem; font-weight: 800; margin: 0;
-            background: linear-gradient(90deg,#fff,#e0e7ff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px;
-        }
-        .hero p { font-size: 1.4rem; color: #eef0ff; margin-top: 16px; font-weight: 300; }
-        .particle { position:absolute; border-radius:50%; background: rgba(255,255,255,0.45); animation: floatY 6s ease-in-out infinite; }
-        .p1{width:14px;height:14px;left:8%;top:30%;animation-delay:0s;}
-        .p2{width:10px;height:10px;left:25%;top:70%;animation-delay:1s;}
-        .p3{width:18px;height:18px;left:70%;top:25%;animation-delay:2s;}
-        .p4{width:8px;height:8px;left:85%;top:65%;animation-delay:1.5s;}
-        .p5{width:12px;height:12px;left:50%;top:15%;animation-delay:.5s;}
-
-        .section-title { font-size:1.7rem; font-weight:700; margin:22px 0 4px; }
-        .section-sub { color:#8b95b8; margin-bottom:20px; }
-
-        .skill-row { margin-bottom:14px; }
-        .skill-head { display:flex; justify-content:space-between; font-size:.92rem; margin-bottom:5px; }
-        .skill-head .pct { color:#a5b4fc; font-weight:700; }
-        .bar-bg { background: rgba(255,255,255,0.07); border-radius:10px; height:12px; overflow:hidden; }
-        .bar-fill { height:100%; border-radius:10px; background: linear-gradient(90deg,#6366f1,#ec4899); animation: fillBar 1.2s cubic-bezier(.22,1,.36,1) both; box-shadow: 0 0 14px rgba(124,58,237,0.6); }
-
-        .insight { padding:18px 22px; border-radius:16px; margin-top:16px; background: rgba(99,102,241,0.10); border-left:4px solid #818cf8; font-size:1rem; color:#dfe4f5; }
-
-        .stat-pill { display:flex; justify-content:space-between; padding:16px 18px; border-radius:14px; background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); margin-bottom:12px; }
-        .stat-pill .v { font-weight:800; color:#f472b6; }
-
-        .detail-head { font-size:1.5rem; font-weight:800; margin-bottom:14px;
-            background:linear-gradient(90deg,#a5b4fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-        .insight-card { padding:22px; border-radius:20px; text-align:center; transition: transform .3s ease, box-shadow .3s ease; }
-        .insight-card:hover { transform: translateY(-8px); box-shadow: 0 0 34px rgba(124,58,237,0.55); }
-        .insight-card .lbl { color:#9aa4c4; font-size:.9rem; letter-spacing:.5px; }
-        .insight-card .name { font-weight:700; font-size:1.1rem; margin:6px 0; }
-        .insight-card .val { font-size:1.35rem; font-weight:800; background:linear-gradient(90deg,#a5b4fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-        .chip { background:rgba(124,58,237,0.25); padding:4px 10px; border-radius:20px; margin:3px; display:inline-block; font-size:.8rem; }
-
-        .stButton > button {
-            border-radius: 14px; padding: .7rem 1.4rem; font-weight:700;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: linear-gradient(90deg,#4f46e5,#7c3aed); color:#fff; transition: all .25s ease;
-        }
-        .stButton > button:hover { transform: translateY(-3px); box-shadow:0 0 26px rgba(124,58,237,0.6); border-color:#a5b4fc; }
-
-        /* Leaderboard — button IS the card (Option A) */
-        .lb-item .stButton > button, .lb-active .stButton > button {
-            width:100%; text-align:left; justify-content:flex-start;
-            border-radius:14px; padding:16px 18px; margin-bottom:10px;
-            font-weight:700; font-size:1rem; letter-spacing:.2px;
-            transition:all .25s ease; white-space:nowrap;
-        }
-        .lb-item .stButton > button {
-            background:rgba(255,255,255,0.04);
-            border:1px solid rgba(255,255,255,0.08);
-            color:#dfe4f5;
-        }
-        .lb-item .stButton > button:hover {
-            transform:translateX(6px);
-            border-color:rgba(124,58,237,0.55);
-            box-shadow:0 0 20px rgba(124,58,237,0.35);
-            background:rgba(255,255,255,0.06);
-        }
-        .lb-active .stButton > button {
-            background:linear-gradient(120deg, rgba(79,70,229,0.45), rgba(219,39,119,0.30));
-            border:1px solid rgba(165,180,252,0.85);
-            color:#ffffff;
-            box-shadow:0 0 26px rgba(124,58,237,0.55);
-            transform:translateX(4px);
-        }
-
-        /* Why Resumatch feature cards */
-        .feature-card {
-            padding:26px 22px; border-radius:20px; min-height:200px; margin-bottom:20px;
-            transition:transform .3s ease, box-shadow .3s ease;
-        }
-        .feature-card:hover { transform:translateY(-8px); box-shadow:0 0 34px rgba(124,58,237,0.55); border-color:rgba(165,180,252,0.6); }
-        .feature-icon { font-size:2.2rem; margin-bottom:12px; }
-        .feature-title { font-weight:700; font-size:1.15rem; margin-bottom:8px; color:#eef0ff; }
-        .feature-desc { color:#9aa4c4; font-size:.92rem; line-height:1.5; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 @st.cache_data(show_spinner=False)
 def load_data() -> pd.DataFrame:
     df = pd.read_csv(CSV_PATH)
@@ -201,7 +76,7 @@ def hero():
         <div class="hero fade-up">
             <div class="particle p1"></div><div class="particle p2"></div>
             <div class="particle p3"></div><div class="particle p4"></div><div class="particle p5"></div>
-            <h1>Resumatch AI</h1>
+            <h1>JobFit AI</h1>
             <p>Analyze Resume → Match Jobs → Build Skills → Crack Interviews</p>
         </div>
         """,
@@ -210,7 +85,7 @@ def hero():
     st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
     _, c, _ = st.columns([1.4, 1, 1.4])
     with c:
-        if st.button("🚀 Analyze Resume", use_container_width=True):
+        if st.button("Analyze Resume", use_container_width=True):
             st.session_state["goto_page"] = "Resume Analyzer"
             st.rerun()
 
@@ -365,8 +240,8 @@ def learning_paths(df: pd.DataFrame):
             )
 
 
-def why_resumatch():
-    st.markdown('<div class="section-title">🚀 Why Resumatch AI?</div>', unsafe_allow_html=True)
+def why_jobfit():
+    st.markdown('<div class="section-title">🚀 Why JobFit AI?</div>', unsafe_allow_html=True)
     features = [
         ("📄", "Resume Analysis", "Extract structured information from resumes using AI-powered parsing."),
         ("🎯", "ATS Score", "Evaluate resume compatibility with Applicant Tracking Systems."),
@@ -389,7 +264,6 @@ def why_resumatch():
 
 
 def render_home():
-    inject_css()
 
     try:
         df = load_data()
@@ -409,9 +283,9 @@ def render_home():
     market_insights(df); st.markdown("<br>", unsafe_allow_html=True)
     skill_intelligence(df); st.markdown("<br>", unsafe_allow_html=True)
     learning_paths(df); st.markdown("<br>", unsafe_allow_html=True)
-    why_resumatch()
+    why_jobfit()
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Resumatch AI", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="JobFit AI", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
     render_home()

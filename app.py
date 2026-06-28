@@ -4,7 +4,7 @@ from streamlit_option_menu import option_menu
 from utils.theme import apply_custom_css
 
 
-APP_NAME = "Resumatch AI"
+APP_NAME = "JobFit AI"
 APP_TAGLINE = "AI-Powered Career Intelligence"
 MENU_OPTIONS = [
     "Home",
@@ -26,7 +26,7 @@ MENU_ICONS = [
 
 st.set_page_config(
     page_title=APP_NAME,
-    page_icon="🎯",
+    page_icon=" ",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -40,7 +40,7 @@ def render_sidebar_brand():
     st.markdown(
         f"""
         <div style="text-align:center; padding:10px 0 4px;">
-            <div class="rm-grad-heading" style="margin-bottom:4px;">🎯 {APP_NAME}</div>
+            <div class="rm-grad-heading" style="margin-bottom:4px;"> {APP_NAME}</div>
             <div style="color:var(--rm-text-2); font-size:.75rem; letter-spacing:.5px;">
                 {APP_TAGLINE}
             </div>
@@ -81,25 +81,28 @@ with st.sidebar:
     render_sidebar_brand()
     st.markdown("---")
 
-    # goto_page navigation fix:
-    # option_menu internally tracks its own state via key="main_menu".
-    # To override it, we must delete the widget's internal state key first,
-    # then set it — otherwise option_menu ignores our value and uses its own.
+    # Navigation fix: option_menu manages its own internal state via key="main_menu".
+    # Simply setting st.session_state["main_menu"] doesn't work because option_menu
+    # overrides it with its own cached value on render.
+    # Fix: delete the widget's internal state key first, then set new value —
+    # this forces option_menu to re-initialize and pick up our target page.
     if "goto_page" in st.session_state:
         target = st.session_state.pop("goto_page")
-        # Delete option_menu's internal widget state so it re-reads our value
-        for k in list(st.session_state.keys()):
-            if k == "main_menu":
-                del st.session_state[k]
-                break
+        if "main_menu" in st.session_state:
+            del st.session_state["main_menu"]
         st.session_state["main_menu"] = target
+
+    # Dynamic default_index — ensures correct item is highlighted
+    # even on programmatic navigation via goto_page
+    _current = st.session_state.get("main_menu", "Home")
+    _default_idx = MENU_OPTIONS.index(_current) if _current in MENU_OPTIONS else 0
 
     selected_page = option_menu(
         menu_title=None,
         options=MENU_OPTIONS,
         icons=MENU_ICONS,
         menu_icon="cast",
-        default_index=0,
+        default_index=_default_idx,
         key="main_menu",
         styles={
             "container": {

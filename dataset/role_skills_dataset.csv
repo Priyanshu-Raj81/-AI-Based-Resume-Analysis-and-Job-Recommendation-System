@@ -1,0 +1,30 @@
+Role,Must_Have_Skills,Good_To_Have_Skills,Total_Skills
+Software Developer,"Python,Java,JavaScript,SQL,Git,Data Structures,Algorithms,OOP","Docker,React,Node.js,REST APIs,Agile,Linux,PostgreSQL,System Design",16
+Backend Developer,"Python,Node.js,SQL,REST APIs,Git,Django,Flask,PostgreSQL","Docker,AWS,MongoDB,Redis,Kafka,Microservices,System Design,FastAPI",16
+Frontend Developer,"HTML,CSS,JavaScript,React,Git,Responsive Design,TypeScript","Angular,Vue.js,Tailwind CSS,Webpack,REST APIs,Figma,Testing,Next.js",15
+Full Stack Developer,"HTML,CSS,JavaScript,React,Node.js,SQL,Git,REST APIs","Python,MongoDB,Docker,TypeScript,AWS,Redis,System Design,GraphQL",16
+Mobile App Developer,"Flutter,Dart,React Native,Firebase,Git,REST APIs","Android Studio,iOS,Swift,Kotlin,State Management,Push Notifications,App Store Deployment",13
+Flutter Developer,"Flutter,Dart,Firebase,REST APIs,Git,State Management","Android Studio,iOS Deployment,BLoC,Provider,SQLite,Push Notifications,CI/CD",13
+Android Developer,"Kotlin,Java,Android Studio,Firebase,REST APIs,Git","Jetpack Compose,MVVM,Room Database,Retrofit,Coroutines,Google Play,Unit Testing",13
+iOS Developer,"Swift,Xcode,UIKit,Firebase,REST APIs,Git","SwiftUI,CoreData,Combine,TestFlight,CocoaPods,MVVM,App Store Deployment",13
+Data Scientist,"Python,Machine Learning,Statistics,Pandas,NumPy,SQL,Scikit-learn,Data Analysis","Deep Learning,TensorFlow,PyTorch,NLP,Matplotlib,Seaborn,Feature Engineering,Model Deployment,Jupyter",17
+Data Analyst,"SQL,Excel,Python,Data Analysis,Power BI,Statistics,Data Visualization","Tableau,Pandas,NumPy,R,Google Analytics,A/B Testing,Business Intelligence,DAX",15
+Data Engineer,"Python,SQL,Apache Spark,ETL,AWS,Data Pipelines,PostgreSQL,Git","Kafka,Airflow,DBT,Snowflake,Hadoop,Docker,Kubernetes,BigQuery,Data Warehousing",17
+ML Engineer,"Python,Machine Learning,TensorFlow,PyTorch,Scikit-learn,Docker,Git,Model Deployment","AWS,Kubernetes,MLflow,Feature Store,CI/CD,FastAPI,Deep Learning,Data Pipelines,A/B Testing",17
+AI Engineer,"Python,Machine Learning,Deep Learning,NLP,LangChain,LLM,OpenAI,Transformers,Git","PyTorch,TensorFlow,Vector Databases,RAG,Prompt Engineering,FastAPI,Docker,AWS,Fine-tuning",18
+NLP Engineer,"Python,NLP,Transformers,BERT,Spacy,NLTK,Machine Learning,Git","LangChain,LLM,PyTorch,TensorFlow,Hugging Face,Text Classification,Named Entity Recognition,Sentiment Analysis",16
+Prompt Engineer,"Prompt Engineering,LLM,OpenAI,Python,NLP,LangChain,Communication","RAG,Vector Databases,Fine-tuning,GPT,Claude,Gemini,Chain of Thought,Few Shot Learning",15
+Business Analyst,"SQL,Excel,Business Analysis,Requirements Gathering,Data Analysis,Communication,Power BI","Tableau,Agile,Scrum,JIRA,Stakeholder Management,Process Mapping,Python,Wireframing",15
+DevOps Engineer,"Docker,Kubernetes,AWS,Linux,CI/CD,Git,Jenkins,Terraform","Ansible,Prometheus,Grafana,Python,Bash Scripting,Azure,GCP,Helm,ArgoCD",17
+Cloud Engineer,"AWS,Azure,GCP,Docker,Kubernetes,Terraform,Linux,Cloud Architecture","Python,Ansible,CI/CD,Serverless,Load Balancing,VPC,IAM,Cost Optimization",16
+Site Reliability Engineer,"Linux,Python,Docker,Kubernetes,AWS,Monitoring,Git,Incident Management","Terraform,Prometheus,Grafana,Ansible,SLO/SLA,Chaos Engineering,Bash,On-call",16
+Information Security Analyst,"Cybersecurity,Network Security,Linux,SIEM,Vulnerability Assessment,Python,Incident Response","Penetration Testing,Cryptography,Firewall,IDS/IPS,OWASP,SOC,Compliance,Risk Management",15
+Cybersecurity Engineer,"Cybersecurity,Linux,Python,Penetration Testing,Network Security,Cryptography,Firewall","Ethical Hacking,AWS Security,SIEM,Malware Analysis,Reverse Engineering,Cloud Security,Zero Trust",14
+Ethical Hacker,"Penetration Testing,Kali Linux,Ethical Hacking,Network Security,Python,OWASP,Burp Suite","Metasploit,Cryptography,Web Application Security,CTF,Reverse Engineering,Social Engineering,Malware Analysis",14
+Product Manager,"Product Management,Agile,Roadmapping,Stakeholder Management,Communication,User Research,SQL","Scrum,JIRA,A/B Testing,Data Analysis,Wireframing,Leadership,Go-to-Market,OKRs",15
+Project Manager,"Project Management,Agile,Scrum,Communication,Risk Management,JIRA,Leadership,Planning","PMP,Budget Management,Stakeholder Management,MS Project,Kanban,Resource Allocation,Reporting",15
+UI UX Designer,"Figma,User Research,Wireframing,Prototyping,UI Design,UX Design,Adobe XD","HTML,CSS,Sketch,Usability Testing,Design Systems,Accessibility,Motion Design,User Journey Mapping",15
+Graphic Designer,"Adobe Photoshop,Adobe Illustrator,Figma,Canva,Visual Design,Typography,Color Theory","Adobe InDesign,After Effects,Branding,Print Design,Video Editing,Social Media Design,Motion Graphics",14
+Blockchain Developer,"Solidity,Ethereum,Web3.js,Smart Contracts,Python,JavaScript,Git,Cryptography","Hardhat,Truffle,DeFi,NFT,IPFS,React,Node.js,Polygon,Rust",17
+Game Developer,"Unity,C#,Game Design,3D Modeling,Physics Engine,Git,Python","Unreal Engine,C++,Blender,Shader Programming,Multiplayer,Mobile Games,VR/AR,Animation",15
+AR VR Developer,"Unity,C#,AR Development,VR Development,3D Modeling,Git,Python","Unreal Engine,ARKit,ARCore,WebXR,OpenXR,Blender,Spatial Computing,HoloLens",15

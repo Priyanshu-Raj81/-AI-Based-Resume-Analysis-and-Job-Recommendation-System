@@ -1,7 +1,7 @@
 """
 theme.py
 --------
-Unified Design System for Resumatch AI.
+Unified Design System for JobFit AI.
 
 Single source of truth for the entire application's visual identity.
 Every page calls `apply_custom_css()` once (via app.py) — no per-page CSS.
@@ -56,7 +56,7 @@ def render_job_chip(text: str, variant: str = "default") -> str:
 def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
                     growth: str, score: int, color: str, badge: str,
                     is_best: bool, required_chips: str, missing_chips: str,
-                    insight: str):
+                    insight: str, apply_link: str = "", description: str = ""):
     """Render a single job recommendation card.
 
     All HTML is built inside theme.py so career.py stays logic-only.
@@ -64,7 +64,7 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
 
     Args:
         rank:           Job rank number (1, 2, 3 ...)
-        job_title:      Job title string (special chars pre-escaped)
+        job_title:      Job title string
         location:       Location string
         salary_txt:     Salary display string
         growth:         Growth outlook text
@@ -75,20 +75,40 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
         required_chips: Pre-built HTML string of required skill chips
         missing_chips:  Pre-built HTML string of missing skill chips
         insight:        AI recommendation text
+        apply_link:     Job apply URL (optional)
+        description:    Short job description (optional)
     """
-    card_class  = "rm-job-card best" if is_best else "rm-job-card"
-    best_badge  = '<div class="rm-best-badge">🏆 Best Match</div>' if is_best else ""
+    card_class   = "rm-job-card best" if is_best else "rm-job-card"
+    best_badge   = '<div class="rm-best-badge">🏆 Best Match</div>' if is_best else ""
 
-    # Escape double-quotes and single-quotes in dynamic text
-    safe_title  = job_title.replace('"', '&quot;').replace("'", "&#39;")
+    safe_title   = job_title.replace('"', '&quot;').replace("'", "&#39;")
     safe_insight = insight.replace('"', '&quot;').replace("'", "&#39;")
+    safe_desc    = description.replace('"', '&quot;').replace("'", "&#39;") if description else ""
+
+    # Apply button HTML
+    apply_html = (
+        f'<a href="{apply_link}" target="_blank" style="' +
+        'display:inline-block;margin-top:14px;padding:8px 20px;' +
+        'background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff;' +
+        'border-radius:20px;font-size:.85rem;font-weight:700;' +
+        'text-decoration:none;border:1px solid rgba(165,180,252,0.4);">' +
+        '🚀 Apply Now</a>'
+    ) if apply_link else ""
+
+    # Description HTML
+    desc_html = (
+        f'<div style="color:#9aa4c4;font-size:.88rem;line-height:1.5;' +
+        f'margin-top:10px;padding:10px 14px;background:rgba(255,255,255,0.03);' +
+        f'border-radius:8px;border:1px solid rgba(255,255,255,0.07);">' +
+        f'📄 {safe_desc}</div>'
+    ) if safe_desc else ""
 
     html = (
         f'<div class="{card_class}">' +
         best_badge +
         f'<div class="rm-job-head">' +
         f'<div style="flex:1;min-width:240px;">' +
-        f'<div class="rm-job-title"><span class="rm-job-rank">#{rank}</span> {safe_title}</div>' +
+        f'<div class="rm-job-title"><span class="rm-job-rank">{rank}.</span> {safe_title}</div>' +
         f'<div class="rm-job-meta">📍 <b>Location:</b> {location}</div>' +
         f'<div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>' +
         f'<div class="rm-job-meta">📈 <b>Growth Outlook:</b> {growth}</div>' +
@@ -99,11 +119,13 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
         f'<div class="rm-score-track"><div class="rm-score-fill" style="width:{score}%;background:{color};"></div></div>' +
         f'</div>' +
         f'</div>' +
+        desc_html +
         f'<div class="rm-job-meta" style="margin-top:14px;"><b>Required Skills:</b></div>' +
         f'<div style="margin:8px 0;">{required_chips}</div>' +
         f'<div class="rm-job-meta" style="margin-top:12px;"><b>Missing Skills:</b></div>' +
         f'<div style="margin:8px 0;">{missing_chips}</div>' +
         f'<div class="rm-info">💡 <b>AI Recommendation:</b> {safe_insight}</div>' +
+        apply_html +
         f'</div>'
     )
     st.markdown(html, unsafe_allow_html=True)
@@ -979,6 +1001,88 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .rm-iv-statbox:hover { border-color: #6366f1; }
 .rm-iv-statbox .k { color: #9aa4c4; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
 .rm-iv-statbox .v { color: #e8ecf6; font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+
+/* ================================================================
+   18. HOME PAGE COMPONENTS
+   ================================================================ */
+
+/* Hero — large landing variant */
+.hero {
+    position: relative; border-radius: 28px; padding: 84px 40px; overflow: hidden;
+    background: var(--rm-grad); background-size: 300% 300%;
+    animation: gradientMove 12s ease infinite, glowPulse 4s ease-in-out infinite;
+    text-align: center; margin-top: 8px;
+}
+.hero h1 {
+    font-size: 4.2rem; font-weight: 800; margin: 0;
+    background: linear-gradient(90deg, #fff, #e0e7ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -2px;
+}
+.hero p { font-size: 1.4rem; color: #eef0ff; margin-top: 16px; font-weight: 300; }
+
+/* Glass utility */
+.glass {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px; box-shadow: var(--rm-shadow);
+}
+
+/* Section titles */
+.section-title { font-size: 1.7rem; font-weight: 700; margin: 22px 0 4px; }
+.section-sub   { color: var(--rm-text-3); margin-bottom: 20px; }
+
+/* Skill bars */
+.skill-row  { margin-bottom: 14px; }
+.skill-head { display: flex; justify-content: space-between; font-size: .92rem; margin-bottom: 5px; }
+.skill-head .pct { color: #a5b4fc; font-weight: 700; }
+.bar-bg   { background: rgba(255,255,255,0.07); border-radius: 10px; height: 12px; overflow: hidden; }
+.bar-fill {
+    height: 100%; border-radius: 10px; background: var(--rm-grad-bar);
+    animation: fillBar 1.2s cubic-bezier(.22,1,.36,1) both;
+    box-shadow: 0 0 14px rgba(124,58,237,0.6);
+}
+
+/* Insight banner */
+.insight {
+    padding: 18px 22px; border-radius: 16px; margin-top: 16px;
+    background: rgba(99,102,241,0.10);
+    border-left: 4px solid #818cf8;
+    font-size: 1rem; color: #dfe4f5;
+}
+
+/* Stat pill */
+.stat-pill {
+    display: flex; justify-content: space-between;
+    padding: 16px 18px; border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 12px;
+}
+.stat-pill .v { font-weight: 800; color: #f472b6; }
+
+/* Detail heading */
+.detail-head {
+    font-size: 1.5rem; font-weight: 800; margin-bottom: 14px;
+    background: var(--rm-grad-text);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Feature cards (Why JobFit section) */
+.feature-card {
+    padding: 26px 22px; border-radius: 20px; min-height: 200px; margin-bottom: 20px;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--rm-glow);
+    border-color: var(--rm-border-hover);
+}
+.feature-icon  { font-size: 2.2rem; margin-bottom: 12px; }
+.feature-title { font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; color: #eef0ff; }
+.feature-desc  { color: var(--rm-text-2); font-size: .92rem; line-height: 1.5; }
+
 
 /* ================================================================
    16. STREAMLIT WIDGET OVERRIDES

@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils.recommender import load_job_data, recommend_jobs
+from utils.recommender import load_job_data, recommend_jobs, get_job_missing_skills
 from utils.theme import (
     render_empty_state, render_hero, render_job_card, render_job_chip,
     section_heading, spacer,
@@ -50,12 +50,16 @@ def _build_insight(job_title, required_skills, user_skills):
 
 
 def _render_recommendation_card(rank, row, user_skills, best_score):
-    score = int(row["Match_Score"])
+    score   = int(row["Match_Score"])
     color, badge = _score_style(score)
     is_best = score == best_score and rank == 1
 
+    # Use pre-computed dataset-based skills (accurate 2026 market data)
     required_skills = _split_skills(row["Key Skills"])
-    missing_skills  = _missing_required_skills(required_skills, user_skills)
+    missing_skills  = row.get("Missing_Skills") or []
+    # Fallback if Missing_Skills column not present
+    if not isinstance(missing_skills, list):
+        missing_skills = _missing_required_skills(required_skills, user_skills)
 
     salary     = row.get("Job Salary", "N/A")
     salary_txt = salary if str(salary) not in ("nan", "N/A") else "Not Disclosed by Recruiter"
@@ -64,13 +68,15 @@ def _render_recommendation_card(rank, row, user_skills, best_score):
     insight    = _build_insight(job_title, row["Key Skills"], user_skills)
     growth     = _growth_outlook(score)
 
-    # Build chip strings using theme helper
+    # Build chip strings — required from dataset, missing from dataset comparison
     required_chips = "".join(render_job_chip(s) for s in required_skills[:8]) \
                      or render_job_chip("N/A")
     missing_chips  = "".join(render_job_chip(s, "warning") for s in missing_skills) \
                      or render_job_chip("No major gaps", "success")
 
-    # Delegate all rendering to theme.py
+    apply_link  = str(row.get("Apply Link",  "") or "")
+    description = str(row.get("Description", "") or "")
+
     render_job_card(
         rank=rank,
         job_title=job_title,
@@ -84,6 +90,8 @@ def _render_recommendation_card(rank, row, user_skills, best_score):
         required_chips=required_chips,
         missing_chips=missing_chips,
         insight=insight,
+        apply_link=apply_link,
+        description=description,
     )
 
 
@@ -114,7 +122,7 @@ def render_career():
     col1, col2 = st.columns([3, 1])
     with col1:
         user_skills_input = st.text_input(
-            "🔑 Your Skills (comma-separated):",
+            "Your Skills (comma-separated):",
             value=auto_skills or "Python, Machine Learning, Data Analysis",
             help="These are auto-filled from your resume. You can edit them.",
         )
@@ -122,11 +130,11 @@ def render_career():
         top_n = st.selectbox("Show Top:", [3, 5, 10], index=1)
 
     role_filter = st.text_input(
-        "🎯 Filter by Role (optional):",
+        "Filter by Role (optional):",
         placeholder="e.g. Data Scientist, Flutter Developer, Software Engineer",
     )
 
-    if st.button("🚀 Find Matching Jobs", type="primary"):
+    if st.button("Find Matching Jobs", type="primary"):
         if not user_skills_input.strip():
             st.warning("Please enter at least one skill!")
             return

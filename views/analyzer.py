@@ -1,10 +1,9 @@
 import streamlit as st
-from utils.pdf_export import generate_pdf
 
 from utils.ai_suggestions import generate_resume_suggestions
 from utils.nlp_extractor import extract_projects, extract_skills
 from utils.pdf_parser import parse_resume
-from utils.recommender import get_role_ats_score, load_job_data, recommend_jobs
+from utils.recommender import get_role_ats_score, load_job_data
 from utils.scorer import calculate_similarity_score
 from utils.theme import render_hero, section_heading, spacer
 
@@ -55,7 +54,7 @@ def _render_project_status(projects):
                 ✅ Projects Analyzed<br>
                 <span style="color:var(--rm-text-2); font-weight:500;">
                     Your projects have been analyzed successfully. Visit
-                    <b>Interview Prep → 🎤 Mock Interview Coach</b>
+                    <b>Interview Prep → Mock Interview Coach</b>
                     to get personalized questions based on your projects.
                 </span>
             </div>
@@ -103,20 +102,12 @@ def _render_suggestions(target_role, extracted_skills, missing_skills,
             job_desc=job_desc,
             experience_level=experience_level
         )
-    st.markdown('<div class="rm-glass">', unsafe_allow_html=True)
     st.markdown(suggestions)
-    st.markdown('</div>', unsafe_allow_html=True)
-    _role = target_role or "Resume"
-    pdf_bytes = generate_pdf(
-        text=suggestions,
-        title="AI Resume Suggestions",
-        subtitle=f"{_role}  ·  {experience_level}"
-    )
     st.download_button(
-        label="📥 Download AI Suggestions as PDF",
-        data=pdf_bytes,
-        file_name=download_name.replace(".txt", ".pdf"),
-        mime="application/pdf"
+        label="📥 Download AI Suggestions",
+        data=suggestions,
+        file_name=download_name,
+        mime="text/plain"
     )
 
 
@@ -170,7 +161,7 @@ def render_analyzer():
 
     spacer()
 
-    if st.button("🚀 Analyze Resume", type="primary"):
+    if st.button("Analyze Resume", type="primary"):
         if not uploaded_file:
             st.warning("Please upload a resume!")
             return
@@ -222,7 +213,7 @@ def render_analyzer():
 
         st.markdown('<div class="rm-success-card">✅ Analysis Complete!</div>', unsafe_allow_html=True)
 
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Score", "⚠️ Skill Gap", "💼 Matches", "🤖 AI Suggestions"])
+        tab1, tab2, tab3 = st.tabs(["Score", "Skill Gap", "AI Suggestions"])
 
         with tab1:
             _render_score_tab(ats_score, extracted_skills, extracted_projects)
@@ -231,16 +222,6 @@ def render_analyzer():
             _render_missing_tab(missing_skills)
 
         with tab3:
-            if mode == "Target Job Role" and not df.empty:
-                recommended = recommend_jobs(extracted_skills, df)
-                st.dataframe(recommended, use_container_width=True)
-            else:
-                st.markdown(
-                    '<div class="rm-info">Matches available only in Target Job Role mode.</div>',
-                    unsafe_allow_html=True,
-                )
-
-        with tab4:
             _render_suggestions(
                 target_role=target_role if mode == "Target Job Role" else "Custom JD Role",
                 extracted_skills=extracted_skills,
@@ -254,7 +235,7 @@ def render_analyzer():
         data = st.session_state.latest_analysis
         _render_analysis_summary(data['role'], data.get('experience_level', 'Fresher'))
 
-        tab1, tab2, tab3 = st.tabs(["📊 Score", "⚠️ Skill Gap", "🤖 AI Suggestions"])
+        tab1, tab2, tab3 = st.tabs(["Score", "Skill Gap", "AI Suggestions"])
 
         with tab1:
             _render_score_tab(data['ats_score'], data['skills'], data.get("projects"))

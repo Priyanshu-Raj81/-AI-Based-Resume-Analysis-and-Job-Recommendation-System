@@ -214,12 +214,16 @@ def render_dashboard():
     if latest and latest["skills"]:
         skill_list = [s.lower() for s in latest["skills"]]
 
-        from utils.scorer import ROLE_SKILLS
+        from utils.scorer import _load_role_skills_df
+        role_df = _load_role_skills_df()
         role_matches = []
-        for role, required in ROLE_SKILLS.items():
-            matched = sum(1 for s in required if s.lower() in skill_list)
+        for _, row in role_df.iterrows():
+            required = [s.strip().lower() for s in str(row["Must_Have_Skills"]).split(",") if s.strip()]
+            if not required:
+                continue
+            matched = sum(1 for s in required if s in skill_list)
             match_pct = round((matched / len(required)) * 100)
-            role_matches.append((role.title(), match_pct))
+            role_matches.append((row["Role"], match_pct))
 
         top_roles = [
             (r, p) for r, p in
