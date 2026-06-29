@@ -71,17 +71,68 @@ def init_state(roles):
 
 
 def hero():
-    st.markdown(
-        """
-        <div class="hero fade-up">
-            <div class="particle p1"></div><div class="particle p2"></div>
-            <div class="particle p3"></div><div class="particle p4"></div><div class="particle p5"></div>
-            <h1>JobFit AI</h1>
-            <p>Analyze Resume → Match Jobs → Build Skills → Crack Interviews</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    import os, base64, io
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "logo.png")
+
+    # ── Hero banner ──────────────────────────────────────────────
+    st.markdown("""
+    <style>
+    .jf-hero {
+        position: relative;
+        border-radius: 28px;
+        padding: 56px 44px 48px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 40%, #0ea5e9 70%, #10b981 100%);
+        background-size: 200% 200%;
+        text-align: center;
+        margin-bottom: 10px;
+        box-shadow: 0 12px 48px rgba(37,99,235,0.35);
+    }
+    .jf-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0 0 12px;
+        letter-spacing: -1.5px;
+        text-shadow: 0 2px 16px rgba(0,0,0,0.18);
+    }
+    .jf-hero p {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.88);
+        margin: 0 auto;
+        font-weight: 300;
+        max-width: 600px;
+        line-height: 1.6;
+        letter-spacing: 0.2px;
+    }
+    .jf-tagline-dot { opacity: 0.6; margin: 0 6px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Build logo img tag safely (no f-string with b64 to avoid brace issues)
+    logo_tag = ""
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        src = "data:image/png;base64," + b64
+        logo_tag = (
+            '<img src="' + src + '"'
+            ' style="width:72px;height:72px;object-fit:contain;' 
+            ' background:rgba(255,255,255,0.15);border-radius:16px;' 
+            ' padding:10px;margin-bottom:18px;' 
+            ' box-shadow:0 4px 20px rgba(0,0,0,0.20);" alt="JobFit AI">' 
+        )
+
+    hero_html = (
+        '<div class="jf-hero fade-up">' +
+        logo_tag +
+        '<h1>JobFit AI</h1>' +
+        '<p>Analyze Resume' + ' &rarr; ' + 'Match Jobs' + ' &rarr; ' + 
+        'Build Skills' + ' &rarr; ' + 'Crack Interviews</p>' +
+        '</div>'
     )
+    st.markdown(hero_html, unsafe_allow_html=True)
+
     st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
     _, c, _ = st.columns([1.4, 1, 1.4])
     with c:
@@ -115,8 +166,8 @@ def kpis(df: pd.DataFrame):
         .kpi {{ padding:28px 24px; border-radius:20px; text-align:center; transition:transform .3s ease, box-shadow .3s ease;
             background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.10); backdrop-filter:blur(16px);
             box-shadow:0 8px 40px rgba(0,0,0,0.35); }}
-        .kpi:hover {{ transform:translateY(-8px); box-shadow:0 0 34px rgba(124,58,237,0.55); }}
-        .num {{ font-size:2.3rem; font-weight:800; background:linear-gradient(90deg,#a5b4fc,#f472b6);
+        .kpi:hover {{ transform:translateY(-8px); box-shadow:0 0 34px rgba(37,99,235,0.55); }}
+        .num {{ font-size:2.3rem; font-weight:800; background:linear-gradient(90deg,#93c5fd,#34d399);
             -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
         .lbl {{ color:#9aa4c4; font-size:.88rem; margin-top:8px; letter-spacing:.6px; }}
         </style>
@@ -160,13 +211,13 @@ def skill_bars(skills: pd.DataFrame):
 def leaderboard(df: pd.DataFrame):
     summary = role_summary(df).head(10).reset_index(drop=True)
 
-    st.markdown('<div class="section-title">🏆 Fastest Growing Roles</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Fastest Growing Roles</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-sub">Click a role to explore its market intelligence. Live from the dataset.</div>', unsafe_allow_html=True)
 
     left, right = st.columns([1, 1.2])
 
     with left:
-        medals = {0: "🥇", 1: "🥈", 2: "🥉"}
+        medals = {}
         active = st.session_state["active_role"]
         for i, r in summary.iterrows():
             mark = medals.get(i, "")
@@ -188,7 +239,7 @@ def leaderboard(df: pd.DataFrame):
         st.markdown(f"""<div class="stat-pill"><span>Average Salary</span><span class="v">₹{info['avg_salary_lpa']:.0f} LPA</span></div>""", unsafe_allow_html=True)
         st.markdown(f"""<div class="stat-pill"><span>Job Openings</span><span class="v">{int(info['job_openings']):,}</span></div>""", unsafe_allow_html=True)
 
-        st.markdown("#### 🔥 Skills Driving Demand")
+        st.markdown("#### Skills Driving Demand")
         skill_bars(role_skills(df, role))
         st.markdown(f"""<div class="insight">{build_insight(df, role)}</div>""", unsafe_allow_html=True)
 
@@ -200,28 +251,79 @@ def market_insights(df: pd.DataFrame):
     hs = summary.sort_values("avg_salary_lpa", ascending=False).iloc[0]
     ho = summary.sort_values("job_openings", ascending=False).iloc[0]
 
-    st.markdown('<div class="section-title">📊 AI Market Insights</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">AI Market Insights</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .mi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-top: 14px;
+    }
+    .mi-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        padding: 24px 20px;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.30);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .mi-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 0 28px rgba(37,99,235,0.40);
+        border-color: rgba(147,197,253,0.40);
+    }
+    .mi-label {
+        color: #93c5fd;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .mi-name {
+        color: #e8ecf6;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+    .mi-val {
+        background: linear-gradient(90deg, #93c5fd, #34d399);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.4rem;
+        font-weight: 800;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     data = [
         ("Highest Growth", hg["role"], f"+{hg['growth_rate']:.0f}%"),
         ("Highest Salary", hs["role"], f"₹{hs['avg_salary_lpa']:.0f} LPA"),
         ("Most Openings", ho["role"], f"{int(ho['job_openings']):,}"),
         ("Most Demanded Skill", top_skill["skill"], f"{top_skill['skill_score']:.0f} avg"),
     ]
-    for col, (lbl, name, val) in zip(st.columns(4), data):
-        col.markdown(
-            f"""<div class="insight-card glass"><div class="lbl">{lbl}</div>
-                <div class="name">{name}</div><div class="val">{val}</div></div>""",
-            unsafe_allow_html=True,
-        )
+
+    cards_html = "".join(
+        f'''<div class="mi-card">
+            <div class="mi-label">{lbl}</div>
+            <div class="mi-name">{name}</div>
+            <div class="mi-val">{val}</div>
+        </div>'''
+        for lbl, name, val in data
+    )
+    st.markdown(f'<div class="mi-grid">{cards_html}</div>', unsafe_allow_html=True)
 
 
 def skill_intelligence(df: pd.DataFrame):
-    st.markdown('<div class="section-title">⚡ Top Emerging Skills</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Top Emerging Skills</div>', unsafe_allow_html=True)
     skill_bars(top_emerging_skills(df, 5))
 
 
 def learning_paths(df: pd.DataFrame):
-    st.markdown('<div class="section-title">🎓 Learning Paths</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Learning Paths</div>', unsafe_allow_html=True)
     summary = role_summary(df).head(6)
     cols_per_row = 3
     rows = [summary.iloc[i:i + cols_per_row] for i in range(0, len(summary), cols_per_row)]
@@ -233,7 +335,7 @@ def learning_paths(df: pd.DataFrame):
                 f"""<div class="glass" style="padding:22px; min-height:180px; margin-bottom:18px;">
                         <div style="font-weight:700;font-size:1.15rem;">{r['role']}</div>
                         <div style="margin:10px 0;">{chips}</div>
-                        <div style="color:#34d399;font-weight:700;font-size:.9rem;">▲ +{r['growth_rate']:.0f}% growth</div>
+                        <div style="color:#34d399;font-weight:700;font-size:.9rem;">+ {r['growth_rate']:.0f}% growth</div>
                         <div style="color:#9aa4c4;margin-top:6px;">₹{r['avg_salary_lpa']:.0f} LPA · {int(r['job_openings']):,} openings</div>
                     </div>""",
                 unsafe_allow_html=True,
@@ -241,21 +343,20 @@ def learning_paths(df: pd.DataFrame):
 
 
 def why_jobfit():
-    st.markdown('<div class="section-title">🚀 Why JobFit AI?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Why JobFit AI?</div>', unsafe_allow_html=True)
     features = [
-        ("📄", "Resume Analysis", "Extract structured information from resumes using AI-powered parsing."),
-        ("🎯", "ATS Score", "Evaluate resume compatibility with Applicant Tracking Systems."),
-        ("💼", "Job Match", "Recommend the most suitable job opportunities based on resume skills."),
-        ("📈", "Skill Gap Analysis", "Identify missing in-demand skills required for target roles."),
-        ("🛣️", "Personalized Learning Path", "Generate a customized roadmap for career growth."),
-        ("🎤", "Interview Preparation", "Practice technical interviews using AI-powered guidance."),
+        ("", "Resume Analysis", "Extract structured information from resumes using AI-powered parsing."),
+        ("", "ATS Score", "Evaluate resume compatibility with Applicant Tracking Systems."),
+        ("", "Job Match", "Recommend the most suitable job opportunities based on resume skills."),
+        ("", "Skill Gap Analysis", "Identify missing in-demand skills required for target roles."),
+        ("", "Personalized Learning Path", "Generate a customized roadmap for career growth."),
+        ("", "Interview Preparation", "Practice technical interviews using AI-powered guidance."),
     ]
     for row_start in range(0, len(features), 3):
         cols = st.columns(3)
         for col, (icon, title, desc) in zip(cols, features[row_start:row_start + 3]):
             col.markdown(
                 f"""<div class="feature-card glass">
-                        <div class="feature-icon">{icon}</div>
                         <div class="feature-title">{title}</div>
                         <div class="feature-desc">{desc}</div>
                     </div>""",

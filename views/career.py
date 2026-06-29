@@ -103,12 +103,18 @@ def render_career():
     )
     spacer()
 
-    auto_skills = ""
-    if "latest_analysis" in st.session_state:
-        skills_list = st.session_state["latest_analysis"].get("skills", [])
+    # ── Auto-load from session ────────────────────────────────────
+    auto_skills  = ""
+    auto_role    = ""
+    has_analysis = "latest_analysis" in st.session_state
+
+    if has_analysis:
+        analysis    = st.session_state["latest_analysis"]
+        skills_list = analysis.get("skills", [])
         auto_skills = ", ".join(skills_list)
+        auto_role   = analysis.get("role", "")
         st.markdown(
-            '<div class="rm-success-card">✅ Skills auto-loaded from your resume analysis.</div>',
+            '<div class="rm-success-card">Skills auto-loaded from your resume analysis.</div>',
             unsafe_allow_html=True,
         )
 
@@ -129,12 +135,21 @@ def render_career():
     with col2:
         top_n = st.selectbox("Show Top:", [3, 5, 10], index=1)
 
+    # Role field — auto-filled from resume analysis, NOT optional if analysis exists
     role_filter = st.text_input(
-        "Filter by Role (optional):",
+        "Filter by Role:" if has_analysis else "Filter by Role (optional):",
+        value=auto_role,
         placeholder="e.g. Data Scientist, Flutter Developer, Software Engineer",
+        help="Auto-filled from your resume analysis. You can change it." if has_analysis else "Filter jobs by a specific role.",
     )
 
-    if st.button("Find Matching Jobs", type="primary"):
+    # Auto-trigger search if coming from resume analysis
+    auto_search = has_analysis and not st.session_state.get("_career_searched")
+    run_search  = st.button("Find Matching Jobs", type="primary") or auto_search
+
+    if run_search:
+        st.session_state["_career_searched"] = True
+
         if not user_skills_input.strip():
             st.warning("Please enter at least one skill!")
             return
@@ -145,12 +160,14 @@ def render_career():
             progress.progress(25, text="Matching Job Profiles...")
             df = load_job_data()
 
-            if role_filter.strip() and not df.empty:
+            # Role-based filtering — use auto_role if role_filter empty
+            active_role = role_filter.strip() or auto_role.strip()
+            if active_role and not df.empty:
                 filtered_df = df[
-                    df["Job Title"].str.contains(role_filter.strip(), case=False, na=False)
+                    df["Job Title"].str.contains(active_role, case=False, na=False)
                 ]
                 if filtered_df.empty:
-                    st.warning(f"No jobs found for '{role_filter}'. Searching all roles instead.")
+                    st.info(f"No exact matches for '{active_role}'. Showing closest skill-based matches.")
                     filtered_df = df
             else:
                 filtered_df = df
@@ -161,15 +178,15 @@ def render_career():
         progress.empty()
 
         if filtered_df.empty:
-            render_empty_state("📂", "Dataset not found", "Please ensure the CSV is in the dataset folder.")
+            render_empty_state("No Dataset", "Dataset not found", "Please ensure the CSV is in the dataset folder.")
             return
         if recommended is None or recommended.empty:
-            render_empty_state("🔍", "No matching jobs found", "Try different or broader skills.")
+            render_empty_state("No Jobs", "No matching jobs found", "Try different or broader skills.")
             return
 
         section_heading(
             f"Top {len(recommended)} Matches Found",
-            "Ranked opportunities based on your entered skills.",
+            f"Ranked opportunities for {role_filter.strip() or auto_role or 'your profile'}.",
         )
         best_score = int(recommended["Match_Score"].max())
 
@@ -195,12 +212,12 @@ def render_career():
                     unsafe_allow_html=True,
                 )
 
-    if "latest_analysis" in st.session_state:
+    if has_analysis:
         missing = st.session_state["latest_analysis"].get("missing", [])
         if missing:
             spacer(28)
             section_heading("Skills You Should Learn for Better Matches")
             st.markdown(
-                "".join(render_job_chip(f"➕ {s}", "warning") for s in missing),
+                "".join(render_job_chip(f"+ {s}", "warning") for s in missing),
                 unsafe_allow_html=True,
             )

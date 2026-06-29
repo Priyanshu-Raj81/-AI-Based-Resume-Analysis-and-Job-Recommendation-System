@@ -188,6 +188,7 @@ def render_analyzer():
 
         if "resume_history" not in st.session_state:
             st.session_state.resume_history = []
+        st.session_state["_analysis_rendered"] = False  # reset for next rerun
 
         attempt_number = len(st.session_state.resume_history) + 1
         st.session_state.resume_history.append({
@@ -212,6 +213,11 @@ def render_analyzer():
         }
 
         st.markdown('<div class="rm-success-card">✅ Analysis Complete!</div>', unsafe_allow_html=True)
+
+        # Rerun once so sidebar immediately shows "New Analysis" button
+        if not st.session_state.get("_analysis_rendered"):
+            st.session_state["_analysis_rendered"] = True
+            st.rerun()
 
         tab1, tab2, tab3 = st.tabs(["Score", "Skill Gap", "AI Suggestions"])
 
