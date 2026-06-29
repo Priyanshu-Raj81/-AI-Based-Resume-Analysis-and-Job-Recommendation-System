@@ -11,18 +11,18 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Project Structure](#-project-structure)
-- [Tech Stack](#-tech-stack)
-- [Datasets](#-datasets)
-- [Getting Started](#-getting-started)
-- [Configuration](#-configuration)
-- [Module Walkthrough](#-module-walkthrough)
-- [How It Works](#-how-it-works)
-- [Screenshots](#-screenshots)
-- [Contributing](#-contributing)
+- [Overview](overview)
+- [Key Features](key-features)
+- [System Architecture](system-architecture)
+- [Project Structure](project-structure)
+- [Tech Stack](tech-stack)
+- [Datasets](datasets)
+- [Getting Started](getting-started)
+- [Configuration](configuration)
+- [Module Walkthrough](module-walkthrough)
+- [How It Works](how-it-works)
+- [Screenshots](screenshots)
+- [Contributing](contributing)
 
 ---
 
@@ -330,35 +330,38 @@ Generates downloadable PDF reports (learning roadmaps, interview reports) using 
 ### 🏠 Home — Career Market Overview
 > Real-time stats: 97 tracked skills, 30 career paths, ₹19.8 LPA avg salary, 1,44,100 job openings
 
-![Home Page](screenshots/home.png)
+![Home Page](screenshots/home.jpeg)
+
+---
+### 📊 Resume Analyzer
+![Resume Analyzer](screenshots/Resume_analyzer.jpeg)
 
 ---
 
 ### 📊 Dashboard — Resume Strength Meter
 > ATS gauge chart with score breakdown across Skills Match (83%), ATS Keywords (72%), Experience Level (60%), and Education (70%)
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/dashboard.jpeg)
 
 ---
-
 ### 💼 Job Recommendation — Skill-Based Job Search
 > Skills auto-loaded from resume analysis. Editable skill list, role filter, and "Skills You Should Learn" gap suggestions
 
-![Job Recommendation](screenshots/job_recommendation.png)
+![Job Recommendation](screenshots/job_recommendation.jpeg)
 
 ---
 
 ### 🗺️ Learning Path — AI Roadmap Generator
 > Three modes: From Resume Analysis / By Job Role / Custom Input. Shows target role, experience level, missing skills, and generates a 4-week roadmap
 
-![Learning Path](screenshots/learning_path.png)
+![Learning Path](screenshots/Learning_Path.jpeg)
 
 ---
 
 ### 🎤 Interview Preparation — AI Coach
 > Auto-filled from resume. Choose between a 40-question bank or live Mock Interview Coach with AI-evaluated answers
 
-![Interview Preparation](screenshots/interview_prep.png)
+![Interview Preparation](screenshots/Interview_prep.jpeg)
 
 ---
 
