@@ -80,6 +80,18 @@ def get_job_missing_skills(resume_skills_list: list, job_key_skills: str) -> tup
     return score, [s.title() for s in matched], [s.title() for s in missing[:7]]
 
 
+@st.cache_resource(show_spinner=False)
+def _get_job_tfidf_index(_df_hash: str, clean_skills: tuple) -> tuple:
+    """
+    Fit TF-IDF vectorizer + matrix once per dataset version and cache it.
+    `_df_hash` is just a cache key (e.g. row count) since DataFrames aren't hashable
+    in a way st.cache_resource likes; `clean_skills` is the actual data used to fit.
+    """
+    vectorizer = TfidfVectorizer()
+    matrix = vectorizer.fit_transform(clean_skills)
+    return vectorizer, matrix
+
+
 def recommend_jobs(resume_skills_list: list, df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
     """
     Recommend top N jobs from dataset based on resume skills.
@@ -101,9 +113,11 @@ def recommend_jobs(resume_skills_list: list, df: pd.DataFrame, top_n: int = 5) -
     resume_skills_str = " ".join(resume_skills_list).lower()
 
     try:
-        # TF-IDF for ranking
-        vectorizer        = TfidfVectorizer()
-        job_skills_matrix = vectorizer.fit_transform(df["Clean_Skills"])
+        # TF-IDF index is fit once and cached — only the resume query is
+        # transformed on each call, instead of re-fitting on the whole dataset.
+        vectorizer, job_skills_matrix = _get_job_tfidf_index(
+            str(len(df)), tuple(df["Clean_Skills"])
+        )
         resume_vector     = vectorizer.transform([resume_skills_str])
 
         similarity_scores = cosine_similarity(resume_vector, job_skills_matrix).flatten()

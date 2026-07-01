@@ -84,20 +84,18 @@ Format the roadmap EXACTLY like this for each week:
 ### Topics to Cover:
 - [Topic 1]
 - [Topic 2]
-
-### 📚 Free Resources:
-- **YouTube:** [Specific channel/video name] - [URL or search query]
-- **Course:** [Platform name] - [Course name] - [URL if known]
-- **Docs:** [Official documentation link]
+- [Topic 3]
 
 ### ✅ Weekly Project:
 [Specific mini-project to build this week to practice]
 
 ---
 
-Do this for all 4 weeks. Be specific with resource names. No vague suggestions."""
+Do this for all 4 weeks. Be specific with topic names. No vague suggestions.
+Do NOT include any resource links, YouTube videos, course names, or URLs — those are
+added separately from a live, verified source. Only output Goal, Topics, and Weekly Project."""
 
-    return query_groq(prompt, max_tokens=2000)
+    return query_groq(prompt, max_tokens=1500)
 
 
 def generate_interview_questions(target_role, extracted_skills, experience_level="Fresher",
@@ -298,4 +296,3 @@ Rules:
 
 
 # New Update
-

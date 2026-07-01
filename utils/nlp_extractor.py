@@ -1,12 +1,20 @@
 import re
 import spacy
+import streamlit as st
 
-try:
-    nlp = spacy.load("en_core_web_sm")
-except:
-    import spacy.cli
-    spacy.cli.download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+
+@st.cache_resource(show_spinner=False)
+def _load_spacy_model():
+    """Load the spaCy model once per app session instead of on every import/rerun."""
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        from spacy.cli import download as spacy_download
+        spacy_download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
+
+
+nlp = _load_spacy_model()
 
 COMMON_SKILLS = [
     # Programming Languages
@@ -186,4 +194,3 @@ def extract_projects(text):
 
 
 # New update
-
