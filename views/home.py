@@ -388,5 +388,4 @@ def render_home():
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="JobFit AI", page_icon="🤖", layout="wide", initial_sidebar_state="collapsed")
     render_home()

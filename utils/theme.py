@@ -1199,6 +1199,11 @@ div[role="radiogroup"] label:has(input:checked) {
 /* ── Divider ─────────────────────────────────────────────────── */
 hr { border-color: rgba(255,255,255,0.06) !important; }
 
+/* ── Hide sidebar collapse/expand arrows ────────────────────── */
+/* Prevents users from accidentally collapsing the sidebar       */
+[data-testid="collapsedControl"] { display: none !important; }
+button[data-testid="baseButton-header"] { display: none !important; }
+
 
 /* ================================================================
    13. LEARNING PATH COMPONENTS
@@ -1324,7 +1329,7 @@ div[role="radiogroup"] label:has(input:checked) {
     flex-shrink: 0; font-size: .7rem; font-weight: 800; letter-spacing: .4px;
     padding: 3px 9px; border-radius: 8px; text-transform: uppercase;
 }
-.lp-res-card .tag.yt { background: rgba(248,113,113,0.18); color: #fca5a5; }
+.lp-res-card .tag.yt { background: rgba(248,113,113,0.18); color: #fca5a5; }  /* YouTube Playlist */
 .lp-res-card .tag.course { background: rgba(37,99,235,0.20); color: #93c5fd; }
 .lp-res-card .info { min-width: 0; }
 .lp-res-card .title {
