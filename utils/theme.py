@@ -55,10 +55,11 @@ def render_job_chip(text: str, variant: str = "default") -> str:
 
 
 def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
-                    growth: str, score: int, color: str, badge: str,
-                    is_best: bool, required_chips: str, missing_chips: str,
-                    insight: str, apply_link: str = "", description: str = ""):
-    """Render a single job recommendation card.
+                    growth: str, is_best: bool, required_chips: str, missing_chips: str,
+                    insight: str, apply_link: str = "", description: str = "",
+                    score: int = None, color: str = None, badge: str = None,
+                    score_display: str = None):
+    """Render a single job recommendation card (no match-percentage display).
 
     All HTML is built inside theme.py so career.py stays logic-only.
     CSS classes are guaranteed to be injected (via apply_custom_css in app.py).
@@ -69,15 +70,16 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
         location:       Location string
         salary_txt:     Salary display string
         growth:         Growth outlook text
-        score:          Match score (int 0-100)
-        color:          Score color hex string
-        badge:          Badge label ("Good Match" etc.)
         is_best:        True if this is the #1 best match
         required_chips: Pre-built HTML string of required skill chips
         missing_chips:  Pre-built HTML string of missing skill chips
         insight:        AI recommendation text
         apply_link:     Job apply URL (optional)
         description:    Short job description (optional)
+        score, color, badge, score_display:
+                        Unused — kept only so existing call sites that still
+                        pass them don't break. The match-percentage box was
+                        removed from the card entirely.
     """
     card_class   = "rm-job-card best" if is_best else "rm-job-card"
     best_badge   = '<div class="rm-best-badge">🏆 Best Match</div>' if is_best else ""
@@ -113,11 +115,6 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
         f'<div class="rm-job-meta">📍 <b>Location:</b> {location}</div>' +
         f'<div class="rm-job-meta">💰 <b>Salary:</b> {salary_txt}</div>' +
         f'<div class="rm-job-meta">📈 <b>Growth Outlook:</b> {growth}</div>' +
-        f'</div>' +
-        f'<div class="rm-score-box">' +
-        f'<div class="rm-score-num" style="color:{color};">{score}%</div>' +
-        f'<div class="rm-score-badge" style="color:{color};">{badge}</div>' +
-        f'<div class="rm-score-track"><div class="rm-score-fill" style="width:{score}%;background:{color};"></div></div>' +
         f'</div>' +
         f'</div>' +
         desc_html +
@@ -589,11 +586,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     background: linear-gradient(90deg, #fbbf24, #f59e0b); color: #1a1206;
     box-shadow: 0 0 16px rgba(251,191,36,0.5);
 }
-.rm-score-box   { text-align: center; min-width: 130px; }
-.rm-score-num   { font-size: 2rem; font-weight: 800; line-height: 1; }
-.rm-score-badge { font-size: .78rem; font-weight: 700; margin-top: 2px; }
-.rm-score-track { background: rgba(255,255,255,0.08); border-radius: 8px; height: 9px; overflow: hidden; margin-top: 8px; }
-.rm-score-fill  { height: 100%; border-radius: 8px; animation: fillBar 1.1s cubic-bezier(.22,1,.36,1) both; }
 
 /* ── 6f. Insight Card — metric highlight (Home) ──────────────── */
 .rm-insight-card {

@@ -131,6 +131,7 @@ def _render_missing_tab(missing_skills):
         )
 
 
+
 def render_analyzer():
     render_hero(
         "AI Resume Analyzer",

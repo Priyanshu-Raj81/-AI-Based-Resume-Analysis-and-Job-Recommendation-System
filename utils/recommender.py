@@ -29,23 +29,24 @@ def load_job_data() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def get_role_ats_score(resume_skills_list: list, target_role: str, df: pd.DataFrame) -> tuple:
+def get_role_ats_score(resume_skills_list: list, target_role: str, df: pd.DataFrame = None) -> tuple:
     """
-    Compute ATS score and missing skills for a given role using dataset.
+    Compute ATS score and missing skills for a given role.
 
-    Uses calculate_score_from_dataset() which fetches required skills
-    directly from the 2026 jobs CSV — accurate, market-driven results.
+    Uses calculate_score_from_dataset(), which is fully based on
+    role_skills_dataset.csv (curated role→skills mapping) and no longer
+    reads the jobs-listings CSV (`df`) at all. `df` is kept as a parameter
+    only for call-site backwards compatibility — it is safe to pass an
+    empty DataFrame or None.
 
     Args:
         resume_skills_list: Skills extracted from resume
         target_role:        Target job role string
-        df:                 Loaded jobs DataFrame
+        df:                 Unused (kept for backwards compatibility)
 
     Returns:
         (ats_score: int, missing_skills: list[str])
     """
-    if df.empty:
-        return 0, []
     return calculate_score_from_dataset(resume_skills_list, target_role, df)
 
 

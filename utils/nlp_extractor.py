@@ -1,17 +1,28 @@
 import re
 import spacy
 import streamlit as st
+from spacy.matcher import PhraseMatcher
 
 
 @st.cache_resource(show_spinner=False)
 def _load_spacy_model():
-    """Load the spaCy model once per app session instead of on every import/rerun."""
+    """
+    Load the spaCy model once per app session instead of on every import/rerun.
+
+    Falls back to a blank tokenizer-only pipeline if the full model can't be
+    loaded or downloaded (e.g. no internet access, restricted network on first
+    deploy). extract_skills() only needs tokenization + PhraseMatcher, so the
+    blank pipeline keeps skill extraction working instead of crashing the app.
+    """
     try:
         return spacy.load("en_core_web_sm")
     except OSError:
-        from spacy.cli import download as spacy_download
-        spacy_download("en_core_web_sm")
-        return spacy.load("en_core_web_sm")
+        try:
+            from spacy.cli import download as spacy_download
+            spacy_download("en_core_web_sm")
+            return spacy.load("en_core_web_sm")
+        except (Exception, SystemExit):
+            return spacy.blank("en")
 
 
 nlp = _load_spacy_model()
@@ -55,13 +66,37 @@ COMMON_SKILLS = [
 ]
 
 
+@st.cache_resource(show_spinner=False)
+def _build_skill_matcher():
+    """
+    Build a spaCy PhraseMatcher once and cache it — matching COMMON_SKILLS
+    as tokenized phrases instead of raw regex. This is genuine NLP:
+    matches happen over spaCy's tokens (so 'C++', 'Node.js', multi-word
+    phrases like 'machine learning' are matched on token boundaries,
+    not on a hand-rolled \\b regex that trips up on punctuation).
+    """
+    matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
+    patterns = [nlp.make_doc(skill) for skill in COMMON_SKILLS]
+    matcher.add("SKILLS", patterns)
+    return matcher
+
+
+_skill_matcher = _build_skill_matcher()
+
+
 def extract_skills(text):
-    text_lower = text.lower()
-    extracted_skills = []
-    for skill in COMMON_SKILLS:
-        if re.search(r'\b' + re.escape(skill) + r'\b', text_lower):
-            extracted_skills.append(skill.title())
-    return list(set(extracted_skills))
+    """
+    NLP-based skill extraction using spaCy's PhraseMatcher over a
+    tokenized Doc, instead of raw regex over a lowercased string.
+    Same return type as before (list[str]) so callers don't need to change.
+    """
+    doc = nlp(text)
+    matches = _skill_matcher(doc)
+    extracted = set()
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        extracted.add(span.text.title())
+    return list(extracted)
 
 
 def extract_projects(text):
@@ -193,4 +228,3 @@ def extract_projects(text):
     return out[:6]
 
 
-# New update

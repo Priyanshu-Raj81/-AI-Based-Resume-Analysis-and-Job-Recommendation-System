@@ -12,6 +12,7 @@ streamlit-option-menu
 python-dotenv
 groq
 requests
+pytest
 fpdf2
 reportlab
 Pillow
