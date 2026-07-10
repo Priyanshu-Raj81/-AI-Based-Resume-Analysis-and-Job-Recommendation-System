@@ -95,7 +95,7 @@ def render_job_card(rank: int, job_title: str, location: str, salary_txt: str,
         'background:linear-gradient(90deg,#1d4ed8,#2563eb);color:#fff;' +
         'border-radius:20px;font-size:.85rem;font-weight:700;' +
         'text-decoration:none;border:1px solid rgba(147,197,253,0.4);">' +
-        '🚀 Apply Now</a>'
+        'Apply Now</a>'
     ) if apply_link else ""
 
     # Description HTML
@@ -286,7 +286,7 @@ def render_empty_state(icon: str, title: str, description: str,
         unsafe_allow_html=True,
     )
     if cta_label and cta_page:
-        if st.button(f"🚀 {cta_label}", key=f"empty_{cta_page}", type="primary"):
+        if st.button(f" {cta_label}", key=f"empty_{cta_page}", type="primary"):
             st.session_state["goto_page"] = cta_page
             st.rerun()
 
