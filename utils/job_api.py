@@ -1,13 +1,27 @@
 import os
-
 import requests
 import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
 
-ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
-ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY")
+
+def _get_secret(key: str):
+    """
+    Read a credential from (in order): environment variables (.env locally),
+    then st.secrets (Streamlit Cloud's Settings > Secrets panel).
+    """
+    value = os.getenv(key)
+    if value:
+        return value
+    try:
+        return st.secrets.get(key)
+    except Exception:
+        return None
+
+
+ADZUNA_APP_ID = _get_secret("ADZUNA_APP_ID")
+ADZUNA_APP_KEY = _get_secret("ADZUNA_APP_KEY")
 BASE_URL = "https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
 
 
