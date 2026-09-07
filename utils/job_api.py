@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import streamlit as st
 from dotenv import load_dotenv
@@ -28,6 +29,42 @@ BASE_URL = "https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
 def is_configured() -> bool:
     """True if Adzuna credentials are present in the environment."""
     return bool(ADZUNA_APP_ID and ADZUNA_APP_KEY)
+
+
+def _normalize(text: str) -> str:
+    """Lowercase, strip punctuation/extra whitespace for fuzzy-safe comparison."""
+    text = (text or "").lower()
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _dedupe_jobs(jobs: list) -> list:
+    """
+    Adzuna aggregates the same underlying job posting from many job boards
+    and recruiters, so identical (title, company) pairs — and sometimes
+    exact duplicate descriptions — commonly appear multiple times in one
+    response. Collapse those down to a single listing, keeping the first
+    (Adzuna's own relevance-ranked) occurrence.
+    """
+    seen_keys = set()
+    seen_descriptions = set()
+    unique_jobs = []
+
+    for job in jobs:
+        key = (_normalize(job["title"]), _normalize(job["company"]), _normalize(job["location"]))
+        desc_key = _normalize(job.get("description", ""))[:300]  # fingerprint, not full text
+
+        if key in seen_keys:
+            continue
+        if desc_key and desc_key in seen_descriptions:
+            continue
+
+        seen_keys.add(key)
+        if desc_key:
+            seen_descriptions.add(desc_key)
+        unique_jobs.append(job)
+
+    return unique_jobs
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -66,11 +103,16 @@ def search_live_jobs(role: str, location: str = "", country: str = "in", results
             "jobs": [],
         }
 
+    # Fetch extra results beyond what's requested — deduplication (see below)
+    # removes a meaningful chunk of Adzuna's raw results, so over-fetching
+    # keeps us from returning fewer jobs than the caller asked for.
+    fetch_count = min(max(results_per_page * 2, 30), 50)  # Adzuna caps at 50/page
+
     params = {
         "app_id": ADZUNA_APP_ID,
         "app_key": ADZUNA_APP_KEY,
         "what": role,
-        "results_per_page": results_per_page,
+        "results_per_page": fetch_count,
         "content-type": "application/json",
     }
     if location:
@@ -107,5 +149,7 @@ def search_live_jobs(role: str, location: str = "", country: str = "in", results
             "description": item.get("description", ""),
             "posted": item.get("created", ""),
         })
+
+    jobs = _dedupe_jobs(jobs)[:results_per_page]
 
     return {"ok": True, "error": None, "jobs": jobs}

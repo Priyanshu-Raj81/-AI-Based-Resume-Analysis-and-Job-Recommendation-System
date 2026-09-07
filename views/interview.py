@@ -178,7 +178,17 @@ def render_question_bank(target_role, auto_skills, experience_level):
             questions = generate_interview_questions(
                 target_role=target_role, extracted_skills=auto_skills,
                 experience_level=experience_level, interview_type=interview_type)
-        st.session_state.qbank_result = questions
+        if cp.is_error_response(questions):
+            st.error(
+                "⚠️ Couldn't generate interview questions right now "
+                "(the AI service may be rate-limited or temporarily unavailable). "
+                "Please try again in a moment."
+            )
+        else:
+            # Some models format the response as a markdown table instead of
+            # the requested Q&A blocks — normalize so both the on-screen
+            # cards and the PDF render correctly either way.
+            st.session_state.qbank_result = cp.normalize_question_bank_text(questions)
 
     if "qbank_result" in st.session_state:
         questions = st.session_state.qbank_result

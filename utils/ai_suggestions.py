@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-MODEL = "llama-3.3-70b-versatile"
+# llama-3.3-70b-versatile was deprecated by Groq (decommissioned Aug 16, 2026).
+# Groq's recommended replacement is openai/gpt-oss-120b (or qwen/qwen3.6-27b).
+# Kept configurable via env var so future Groq deprecations don't require a code change.
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
 def query_groq(prompt, max_tokens=2000, temperature=0.7):
@@ -194,8 +197,12 @@ CRITICAL INSTRUCTIONS:
   * Senior (3+ years): architecture decisions, leadership, complex problem solving
 - Use candidate skills in questions: {', '.join(extracted_skills[:5]) if extracted_skills else 'general skills'}
 - Answers must be practical and impressive — NOT textbook definitions
+- Do NOT format the output as a markdown table. Do NOT use the pipe character "|"
+  anywhere in the response. Every question must be its own block exactly as shown
+  in the template above (bold question line, then bullet lines for Type/Difficulty/
+  Answer/Tip) — never rows in a table.
 
-Format in clean Markdown. ALL 40 questions mandatory."""
+Format in clean Markdown. ALL 40 questions mandatory.""" 
 
     return query_groq(prompt, max_tokens=8000)
 

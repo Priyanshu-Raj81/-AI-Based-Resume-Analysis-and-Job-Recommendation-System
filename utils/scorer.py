@@ -74,8 +74,8 @@ def _get_role_skills_from_csv(target_role: str) -> dict:
         return {}
 
     row = match.iloc[0]
-    must_have     = [s.strip().lower() for s in str(row["Must_Have_Skills"]).split(",")  if s.strip()]
-    good_to_have  = [s.strip().lower() for s in str(row["Good_To_Have_Skills"]).split(",") if s.strip()]
+    must_have     = [s.strip().lower() for s in str(row["Must_Have_Skills"]).split(",")  if s.strip() and s.strip().lower() != "nan"]
+    good_to_have  = [s.strip().lower() for s in str(row["Good_To_Have_Skills"]).split(",") if s.strip() and s.strip().lower() != "nan"]
 
     return {
         "must_have":    must_have,

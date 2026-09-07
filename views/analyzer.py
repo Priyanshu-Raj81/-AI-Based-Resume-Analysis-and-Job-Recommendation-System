@@ -1,6 +1,7 @@
 import streamlit as st
 
 from utils.ai_suggestions import generate_resume_suggestions
+from utils.coach_parsing import is_error_response
 from utils.nlp_extractor import extract_projects, extract_skills
 from utils.pdf_parser import parse_resume
 from utils.recommender import get_role_ats_score, load_job_data
@@ -102,6 +103,14 @@ def _render_suggestions(target_role, extracted_skills, missing_skills,
             job_desc=job_desc,
             experience_level=experience_level
         )
+    if is_error_response(suggestions):
+        st.error(
+            "⚠️ AI suggestions couldn't be generated right now "
+            "(the AI service may be rate-limited or temporarily unavailable). "
+            "Please try again in a moment."
+        )
+        return
+
     st.markdown(suggestions)
     st.download_button(
         label="📥 Download AI Suggestions",

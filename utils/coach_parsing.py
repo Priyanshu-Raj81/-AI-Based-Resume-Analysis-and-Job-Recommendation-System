@@ -16,6 +16,87 @@ SCORE_DIMENSIONS = (
 )
 
 
+def _split_table_row(line: str) -> list:
+    """Split a markdown table row '| a | b | c |' into ['a', 'b', 'c']."""
+    s = line.strip()
+    if s.startswith('|'):
+        s = s[1:]
+    if s.endswith('|'):
+        s = s[:-1]
+    return [c.strip() for c in s.split('|')]
+
+
+def _is_separator_row(cells: list) -> bool:
+    """True for a markdown table's header-separator row, e.g. |---|:---:|---|."""
+    if not cells:
+        return False
+    return all(re.fullmatch(r':?-{2,}:?', c.replace(' ', '')) for c in cells if c.strip())
+
+
+def _strip_label(cell: str, label: str) -> str:
+    """Strip a leading '✅ Answer:' / '💡 Tip:' style label (with optional emoji) from a cell."""
+    return re.sub(rf'^[^\w]*{label}\s*:\s*', '', cell, flags=re.I).strip()
+
+
+def normalize_question_bank_text(raw: str) -> str:
+    """
+    Normalize AI-generated interview question output into the canonical block
+    format the UI and PDF renderers expect:
+
+        **Q1: question text?**
+        - **Type:** Technical
+        - **Difficulty:** Easy
+        - **✅ Answer:** ...
+        - **💡 Tip:** ...
+        ---
+
+    Some models (e.g. after a Groq model migration) format the same content
+    as a markdown table (`| Q1 | question | Type | Difficulty | Answer | Tip |`)
+    despite explicit prompt instructions not to. That breaks both the
+    on-screen card parser (which looks for lines starting with '**Q1:')
+    and the PDF output (which just dumps raw table rows as text).
+
+    This function detects table rows and rewrites them into the canonical
+    block format. Lines that are already in block format (or anything else
+    that isn't a table row) pass through completely unchanged, so this is
+    always safe to call.
+    """
+    if not raw or not isinstance(raw, str):
+        return raw
+
+    out_lines = []
+    for line in raw.split('\n'):
+        s = line.strip()
+
+        if not s.startswith('|') or s.count('|') < 3:
+            out_lines.append(line)
+            continue
+
+        cells = _split_table_row(s)
+
+        if _is_separator_row(cells):
+            continue  # markdown table's |---|---| divider row — drop it
+
+        if not cells or not re.match(r'^Q?\d+$', cells[0], re.I):
+            continue  # table header row (e.g. "# | Question | Type | ...") — drop it
+
+        q_num = cells[0] if cells[0].upper().startswith('Q') else f"Q{cells[0]}"
+        question   = cells[1] if len(cells) > 1 else ""
+        q_type     = cells[2] if len(cells) > 2 else "Technical"
+        difficulty = cells[3] if len(cells) > 3 else "Medium"
+        answer     = _strip_label(cells[4], "answer") if len(cells) > 4 else ""
+        tip        = _strip_label(cells[5], "tip") if len(cells) > 5 else ""
+
+        out_lines.append(f"**{q_num}: {question}**")
+        out_lines.append(f"- **Type:** {q_type}")
+        out_lines.append(f"- **Difficulty:** {difficulty}")
+        out_lines.append(f"- **✅ Answer:** {answer}")
+        out_lines.append(f"- **💡 Tip:** {tip}")
+        out_lines.append("---")
+
+    return '\n'.join(out_lines)
+
+
 def is_error_response(raw) -> bool:
     return isinstance(raw, str) and raw.strip().startswith("⚠️ Error")
 

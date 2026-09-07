@@ -3,6 +3,7 @@
 import re
 import streamlit as st
 from utils.ai_suggestions import generate_learning_path
+from utils.coach_parsing import is_error_response
 from utils.pdf_export import generate_pdf
 from utils.theme import render_hero, section_heading, spacer
 from utils.resource_search import get_week_resources
@@ -290,6 +291,14 @@ def render_learning():
                 experience_level=experience_level,
                 missing_skills=missing_skills
             )
+
+        if is_error_response(roadmap):
+            st.error(
+                "⚠️ Couldn't generate your roadmap right now "
+                "(the AI service may be rate-limited or temporarily unavailable). "
+                "Please try again in a moment."
+            )
+            return
 
         st.success("✅ Your Personalized Roadmap is Ready!")
         spacer(10)
