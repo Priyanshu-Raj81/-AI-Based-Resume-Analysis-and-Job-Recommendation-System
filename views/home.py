@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from utils.job_api import get_live_it_job_count, is_configured as adzuna_configured
 
 CSV_PATH = "dataset/career_trends.csv"
 REQUIRED_COLUMNS = ["role", "growth_rate", "avg_salary_lpa", "job_openings", "skill", "skill_score"]
@@ -143,12 +144,36 @@ def hero():
 
 def kpis(df: pd.DataFrame):
     summary = role_summary(df)
+
+    # Openings-weighted average salary: a role's number of tracked openings
+    # is used as its weight, so common roles (e.g. Backend Developer) pull
+    # the figure more than rare/niche high-paying ones (e.g. Solutions
+    # Architect), giving a number closer to what a typical user will
+    # actually see rather than a specialist-skewed plain average.
+    weighted_salary = float(
+        (summary["avg_salary_lpa"] * summary["job_openings"]).sum()
+        / summary["job_openings"].sum()
+    )
+
+    # Prefer a real, live count of currently-open IT jobs (Adzuna) over the
+    # static dataset's sum — that static sum is just 30 hardcoded numbers
+    # in a CSV and isn't representative of anything real.
+    live_openings = get_live_it_job_count() if adzuna_configured() else None
+    openings_is_live = live_openings is not None
+    openings_value = live_openings if openings_is_live else int(summary["job_openings"].sum())
+    openings_label = "LIVE IT JOB OPENINGS" if openings_is_live else "JOB OPENINGS (SAMPLE DATASET)"
+
     cards = [
         (int(df["skill"].nunique()), 0, "", "", "TOTAL SKILLS"),
         (int(df["role"].nunique()), 0, "", "", "CAREER PATHS"),
-        (float(summary["avg_salary_lpa"].mean()), 1, "₹", " LPA", "AVG SALARY"),
-        (int(summary["job_openings"].sum()), 0, "", "", "JOB OPENINGS"),
+        (weighted_salary, 1, "₹", " LPA", "AVG SALARY"),
+        (openings_value, 0, "", "", openings_label),
     ]
+    source_note = (
+        "🟢 Live from Adzuna · updates hourly"
+        if openings_is_live else
+        "Based on a sample dataset of 30 tracked roles — connect an Adzuna API key for live figures"
+    )
     boxes = "".join(
         f"""<div class="kpi glass">
                 <div class="num" data-target="{val}" data-dec="{dec}" data-pre="{pre}" data-suf="{suf}">0</div>
@@ -170,8 +195,10 @@ def kpis(df: pd.DataFrame):
         .num {{ font-size:2.3rem; font-weight:800; background:linear-gradient(90deg,#93c5fd,#34d399);
             -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
         .lbl {{ color:#9aa4c4; font-size:.88rem; margin-top:8px; letter-spacing:.6px; }}
+        .src-note {{ color:#6b7492; font-size:.78rem; text-align:center; margin-top:14px; letter-spacing:.2px; }}
         </style>
         <div class="kpi-grid">{boxes}</div>
+        <div class="src-note">{source_note}</div>
         <script>
         document.querySelectorAll('.num').forEach(function(el) {{
             const target = parseFloat(el.dataset.target);
@@ -190,7 +217,7 @@ def kpis(df: pd.DataFrame):
         }});
         </script>
         """,
-        height=170,
+        height=195,
     )
 
 

@@ -67,6 +67,40 @@ def _dedupe_jobs(jobs: list) -> list:
     return unique_jobs
 
 
+@st.cache_data(ttl=21600, show_spinner=False)  # 6h — this is a homepage stat, not a search result
+def get_live_it_job_count(country: str = "in"):
+    """
+    Total number of currently-live IT-category job ads in Adzuna's index for
+    this country. Used for an honest "live openings" homepage stat instead
+    of summing a static, hand-curated dataset.
+
+    Returns an int on success, or None if Adzuna isn't configured / the
+    call fails — callers should fall back to a clearly-labeled static
+    estimate in that case rather than showing a broken stat.
+    """
+    if not is_configured():
+        return None
+
+    params = {
+        "app_id": ADZUNA_APP_ID,
+        "app_key": ADZUNA_APP_KEY,
+        "category": "it-jobs",
+        "results_per_page": 1,  # we only need the "count" field, not the results
+        "content-type": "application/json",
+    }
+    url = BASE_URL.format(country=country, page=1)
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code != 200:
+            return None
+        data = response.json()
+        count = data.get("count")
+        return int(count) if count is not None else None
+    except (requests.RequestException, ValueError, TypeError):
+        return None
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def search_live_jobs(role: str, location: str = "", country: str = "in", results_per_page: int = 15):
     """

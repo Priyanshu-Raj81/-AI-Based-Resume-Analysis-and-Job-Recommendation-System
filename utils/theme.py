@@ -400,14 +400,18 @@ _CSS = """<style>
     color: var(--rm-text);
 }
 #MainMenu, footer, header { visibility: hidden; }
+
+/* ── Top masthead (YouTube-style header bar with hamburger + brand) ── */
 .block-container {
-    padding-top: 2.8rem;
+    padding-top: 4.6rem;
     padding-bottom: 3rem;
     max-width: 1320px;
 }
 
-/* Sidebar */
+/* Sidebar — offset below the fixed masthead instead of running full-height */
 section[data-testid="stSidebar"] {
+    top: 56px !important;
+    height: calc(100vh - 56px) !important;
     background: linear-gradient(180deg, #0c0e1a 0%, #0a0c17 100%);
     border-right: 1px solid rgba(255,255,255,0.06);
 }
