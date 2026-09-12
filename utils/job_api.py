@@ -67,6 +67,45 @@ def _dedupe_jobs(jobs: list) -> list:
     return unique_jobs
 
 
+@st.cache_data(ttl=21600, show_spinner=False)  # 6h — homepage stat, not a search result
+def get_live_avg_salary_lpa(country: str = "in"):
+    """
+    Real average advertised salary for IT jobs, straight from Adzuna's
+    /history endpoint (their own labor-market analytics, not derived from
+    a static local dataset). Returns the most recent month's figure,
+    converted to LPA (Adzuna's India salary figures are annual INR, same
+    convention already used for salary_min/salary_max elsewhere in the app).
+
+    Returns a float on success, or None if Adzuna isn't configured / the
+    call fails / no data is available — callers should fall back to a
+    clearly-labeled static estimate in that case.
+    """
+    if not is_configured():
+        return None
+
+    params = {
+        "app_id": ADZUNA_APP_ID,
+        "app_key": ADZUNA_APP_KEY,
+        "category": "it-jobs",
+        "content-type": "application/json",
+    }
+    url = f"https://api.adzuna.com/v1/api/jobs/{country}/history"
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code != 200:
+            return None
+        data = response.json()
+        months = data.get("month") or {}
+        if not months:
+            return None
+        latest_key = max(months.keys())  # "YYYY-MM" strings sort correctly
+        latest_salary = months[latest_key]
+        return round(float(latest_salary) / 100000, 1)  # annual INR -> LPA
+    except (requests.RequestException, ValueError, TypeError, KeyError):
+        return None
+
+
 @st.cache_data(ttl=21600, show_spinner=False)  # 6h — this is a homepage stat, not a search result
 def get_live_it_job_count(country: str = "in"):
     """

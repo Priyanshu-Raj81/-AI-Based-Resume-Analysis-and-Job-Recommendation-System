@@ -1059,6 +1059,21 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .stat-pill .v { font-weight: 800; color: #34d399; }
 
+/* Skill chip — small pill badge used for skill tags (e.g. Learning Paths cards) */
+.chip {
+    display: inline-block;
+    padding: 4px 12px;
+    margin: 0 6px 6px 0;
+    border-radius: 999px;
+    background: rgba(37,99,235,0.12);
+    border: 1px solid rgba(37,99,235,0.35);
+    color: #93c5fd;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
 /* Detail heading */
 .detail-head {
     font-size: 1.5rem; font-weight: 800; margin-bottom: 14px;
